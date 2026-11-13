@@ -18,10 +18,21 @@ export interface ImportBatch {
   skipped: { existing: number; suppressed: number; duplicates: number; no_consent: number };
   confirmed_count: number;
   purged_count: number;
+  /** When the first ask email went out; null until the service's sender has really sent one. */
+  first_sent_at: string | null;
   created_at: string | null;
 }
 
 const STATUS_WORDS: Record<ImportBatch['status'], string> = { draft: 'Not started', sending: 'Asking', done: 'Everyone asked', stopped: 'Stopped' };
+
+/**
+ * A started list is "Asking" only once an ask email has really gone out. Until the service's sender sends
+ * the first one (`first_sent_at`), the list is started but nobody has been asked, and saying "Asking" would
+ * tell the admin their old clients have been written to when they have not.
+ */
+function statusWords(b: ImportBatch): string {
+  return b.status === 'sending' && !b.first_sent_at ? 'Not asked yet' : STATUS_WORDS[b.status];
+}
 
 export function ImportsView({ newImport }: { newImport?: ReactNode }) {
   const { request, notify, onError, canEdit } = useGrowth();
@@ -89,7 +100,7 @@ export function ImportsView({ newImport }: { newImport?: ReactNode }) {
                 <div className="gr-grow">
                   <p className="gr-row-title">{b.label}</p>
                   <div className="gr-pills">
-                    <Pill tone={b.status === 'sending' ? 'accent' : b.status === 'stopped' ? 'bad' : 'muted'}>{STATUS_WORDS[b.status]}</Pill>
+                    <Pill tone={b.status === 'sending' ? 'accent' : b.status === 'stopped' ? 'bad' : 'muted'}>{statusWords(b)}</Pill>
                     <span className="gr-hint">
                       {b.imported_count} of {b.row_count} kept, {b.confirmed_count} said yes{b.purged_count > 0 ? `, ${b.purged_count} deleted after no answer` : ''}
                       {b.created_at ? `. Imported ${dayLabel(b.created_at)}` : ''}

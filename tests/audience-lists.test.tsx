@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { GrowthProvider, ListsView, SegmentsView, TargetPicker } from '../src';
+import { GrowthProvider, ImportsView, ListsView, SegmentsView, TargetPicker } from '../src';
 
 const hrefFor = (tab: string) => `/admin/growth/${tab}`;
 
@@ -62,5 +62,21 @@ describe('saved audiences', () => {
     mount(request, <SegmentsView />);
     expect(await screen.findByText('Reach unknown')).toBeTruthy();
     expect(screen.getByText('The product could not be reached for its people groups.')).toBeTruthy();
+  });
+});
+
+describe('imported lists', () => {
+  const batch = { uuid: 'b-1', label: 'clients_2024', consent_mode: 'repermission', row_count: 5, imported_count: 2, skipped: { existing: 1, suppressed: 0, duplicates: 1, no_consent: 1 }, confirmed_count: 0, purged_count: 0, created_at: null };
+
+  it('a started list is "Asking" only once an ask email has really gone out', async () => {
+    const notSent = vi.fn(async () => ({ data: { imports: [{ ...batch, status: 'sending', first_sent_at: null }] } }));
+    const first = mount(notSent, <ImportsView />);
+    expect(await screen.findByText('Not asked yet')).toBeTruthy();
+    expect(screen.queryByText('Asking')).toBeNull();
+    first.unmount();
+
+    const sent = vi.fn(async () => ({ data: { imports: [{ ...batch, status: 'sending', first_sent_at: '2026-11-14T09:00:00Z' }] } }));
+    mount(sent, <ImportsView />);
+    expect(await screen.findByText('Asking')).toBeTruthy();
   });
 });
