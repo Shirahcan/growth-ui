@@ -33,9 +33,11 @@ export interface GrowthWords {
   assistant: string;
   /** Audience key => what the product calls it ("applicants" => "Moving to Canada"). */
   audiences: Record<string, string>;
+  /** The product's own name, as a consent receipt or a confirmation names it ("Portify"). */
+  product: string;
 }
 
-const DEFAULT_WORDS: GrowthWords = { assistant: 'The assistant', audiences: {} };
+const DEFAULT_WORDS: GrowthWords = { assistant: 'The assistant', audiences: {}, product: 'this product' };
 
 function PlainLink({ href, className, title, children }: { href: string; className?: string; title?: string; children: ReactNode }) {
   return (

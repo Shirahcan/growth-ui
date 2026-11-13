@@ -288,3 +288,23 @@ a.gr-button { text-decoration: none; }
 }
 .gr-pill-remove:hover, .gr-pill-remove:focus-visible { color: var(--gr-danger, #dc2626); }
 .gr-grid-3 { display: grid; gap: 0.75rem; grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); }
+
+/* G4e4b1: the consent trail, newest first. A vertical rule in the border colour joins the moments; the
+   newest one carries the accent, because it is the state the person is in now. */
+.gr-trail { list-style: none; margin: 0; padding: 0 0 0 1.25rem; position: relative; }
+.gr-trail::before { content: ''; position: absolute; left: 0.3125rem; top: 0.5rem; bottom: 0.5rem; width: 1px; background: var(--gr-border, #e2e8f0); }
+.gr-trail-entry { position: relative; display: grid; gap: 0.125rem; padding: 0.5rem 0; }
+.gr-trail-entry::before {
+  content: ''; position: absolute; left: -1.25rem; top: 0.875rem; width: 0.6875rem; height: 0.6875rem;
+  border-radius: 9999px; background: var(--gr-surface, #fff); border: 2px solid var(--gr-border, #e2e8f0);
+}
+.gr-trail-entry:first-child::before { border-color: var(--gr-accent, #4361ee); background: var(--gr-accent, #4361ee); }
+.gr-trail-when { font-size: 0.75rem; color: var(--gr-ink-muted, #64748b); font-variant-numeric: tabular-nums; }
+.gr-trail-what { font-size: 0.875rem; color: var(--gr-ink, #0f172a); }
+
+/* G4e4b1: the people list's filter row and its pager. */
+.gr-filters { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
+.gr-filters .gr-input { width: auto; min-width: 14rem; flex: 1 1 14rem; }
+.gr-pager { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; font-size: 0.8125rem; color: var(--gr-ink-muted, #64748b); }
+.gr-row-button { all: unset; cursor: pointer; display: block; min-width: 0; }
+.gr-row-button:focus-visible { outline: 2px solid var(--gr-accent, #4361ee); outline-offset: 2px; border-radius: 0.5rem; }

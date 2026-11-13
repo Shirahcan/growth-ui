@@ -24,6 +24,11 @@ export function dayLabel(ymd: string): string {
   return new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric', year: 'numeric' }).format(new Date(y, m - 1, d));
 }
 
+/** "Nov 13, 2026, 9:05 PM" for a moment, in the viewer's own time zone (a consent trail, a receipt). */
+export function momentLabel(iso: string): string {
+  return new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' }).format(new Date(iso));
+}
+
 /** The local calendar day of a moment, as Y-m-d. */
 export function localDay(date: Date): string {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
