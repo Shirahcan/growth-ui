@@ -52,6 +52,12 @@ describe('the audience people', () => {
     expect(text.split('\n').filter((l) => l.startsWith('- '))).toHaveLength(2);
   });
 
+  it('an imported person came from a named list; they never signed up', () => {
+    const imported = { ...sheet, consent: { ...sheet.consent, where: 'import', ip_recorded: false, import_list: 'clients_2024' } };
+    expect(receiptText(imported as never, 'Portify')).toContain('Came from the imported list: clients_2024');
+    expect(receiptText(imported as never, 'Portify')).not.toContain('First recorded at');
+  });
+
   it('the filters reach the service as query parameters', async () => {
     const request = vi.fn(async (_method: string, _path: string) => ({ data: { people: [], meta: { current_page: 1, last_page: 1, total: 0 } } }));
     mount(request, <PeopleView />);

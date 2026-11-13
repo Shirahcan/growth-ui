@@ -38,6 +38,8 @@ export interface PersonSheet extends Person {
     current: boolean;
     expires_at: string | null;
     where: string | null;
+    /** The imported list they came from (by its label); null for anyone who signed up themselves. */
+    import_list?: string | null;
     ip_recorded: boolean;
   };
   /** Why nobody may mail this address here ("unsubscribed", "bounced", ...), or null. */

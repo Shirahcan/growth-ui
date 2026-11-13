@@ -27,7 +27,9 @@ export function receiptText(p: Sheet, productName: string): string {
     `Consent record for ${p.email} (${productName})`,
     `Status: ${STATUS_WORDS[p.status] ?? p.status}`,
     `Basis: ${p.consent.basis_words}${p.consent.expires_at ? `, until ${dayLabel(p.consent.expires_at)}` : ''}`,
-    `First recorded at: ${p.consent.where ?? 'not recorded'}${p.consent.ip_recorded ? ' (IP address kept as evidence)' : ''}`,
+    p.consent.import_list
+      ? `Came from the imported list: ${p.consent.import_list}`
+      : `First recorded at: ${p.consent.where ?? 'not recorded'}${p.consent.ip_recorded ? ' (IP address kept as evidence)' : ''}`,
     p.blocked ? `Blocked from email: ${p.blocked}` : 'Not blocked from email',
     '',
     'History, newest first:',
@@ -121,7 +123,11 @@ export function PersonSheet({ uuid, onClose, onChanged, extras }: PersonSheetPro
           <div className="gr-settings-block">
             <p className="gr-row-title">{person.consent.basis_words}</p>
             <p className="gr-hint">
-              {person.consent.where ? `First recorded at "${person.consent.where}".` : 'Where they signed up was not recorded.'}{' '}
+              {person.consent.import_list
+                ? `Came from the imported list "${person.consent.import_list}".`
+                : person.consent.where
+                  ? `First recorded at "${person.consent.where}".`
+                  : 'Where they signed up was not recorded.'}{' '}
               {person.consent.expires_at ? `This consent runs out on ${dayLabel(person.consent.expires_at)} unless they confirm.` : 'This consent does not run out.'}
             </p>
           </div>
