@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState } from 'react';
 import { useGrowth } from '../GrowthProvider';
 import { unwrap, type Envelope } from '../plan/types';
+import { fieldError } from '../settings/SourceDialog';
 import { CsvError, parseCsv, type Csv } from './csv';
 
 /**
@@ -45,6 +46,9 @@ export interface ImportFlow {
   /** Rows are going out now (the start button waits). */
   sending: boolean;
   started: { uuid: string; imported: number } | null;
+  /** Why growth-service refused the last check or start, in its own words (a setting not chosen yet, a list
+   *  too long). Drawn on the step itself: a host's error surface may stay out of a 422, believing a form shows it. */
+  refusal: { step: 'preview' | 'start'; message: string } | null;
   loadFile: (file: File) => Promise<void>;
   setMapping: (m: Partial<Mapping>) => void;
   setMode: (m: ConsentMode) => void;
@@ -92,9 +96,18 @@ export function useImportFlow(): ImportFlow {
   const [sending, setSending] = useState(false);
   const [batch, setBatch] = useState<{ uuid: string; nextChunk: number } | null>(null);
   const [started, setStarted] = useState<{ uuid: string; imported: number } | null>(null);
+  const [refusal, setRefusal] = useState<ImportFlow['refusal']>(null);
+
+  /** A refusal is said on the step; anything else goes to the host's error surface. */
+  const fail = useCallback((step: 'preview' | 'start', e: unknown) => {
+    const message = fieldError(e);
+    if (message) setRefusal({ step, message });
+    else onError(e);
+  }, [onError]);
 
   const loadFile = useCallback(async (file: File) => {
     setFileError(null);
+    setRefusal(null);
     setPreview(null);
     setBatch(null);
     try {
@@ -112,6 +125,7 @@ export function useImportFlow(): ImportFlow {
   const setMapping = useCallback((m: Partial<Mapping>) => {
     setMappingState((cur) => ({ ...cur, ...m }));
     setPreview(null);
+    setRefusal(null);
   }, []);
 
   const rows = useMemo(() => {
@@ -140,6 +154,7 @@ export function useImportFlow(): ImportFlow {
   const runPreview = useCallback(async () => {
     if (!mode) return;
     setPreviewing(true);
+    setRefusal(null);
     try {
       const sum: Preview = { counts: { can_ask: 0, already_subscribed: 0, suppressed: 0, duplicates: 0, invalid_email: 0, no_consent: 0 }, reasons: {} };
       for (const part of chunks) {
@@ -149,15 +164,16 @@ export function useImportFlow(): ImportFlow {
       }
       setPreview(sum);
     } catch (e) {
-      onError(e);
+      fail('preview', e);
     } finally {
       setPreviewing(false);
     }
-  }, [chunks, mode, proofRef, request, onError]);
+  }, [chunks, mode, proofRef, request, fail]);
 
   const start = useCallback(async () => {
     if (!mode || sending) return;
     setSending(true);
+    setRefusal(null);
     try {
       let current = batch;
       if (!current) {
@@ -175,11 +191,11 @@ export function useImportFlow(): ImportFlow {
       const done = unwrap(await request<Envelope<{ import: { uuid: string; imported_count: number } }>>('POST', `audience/imports/${current.uuid}/start`, {}));
       setStarted({ uuid: done.import.uuid, imported: done.import.imported_count });
     } catch (e) {
-      onError(e); // the batch and the next chunk are kept: running start() again resumes
+      fail('start', e); // the batch and the next chunk are kept: running start() again resumes
     } finally {
       setSending(false);
     }
-  }, [batch, chunks, label, mode, proofRef, request, rows.length, onError, sending]);
+  }, [batch, chunks, label, mode, proofRef, request, rows.length, fail, sending]);
 
-  return { fileName, csv, fileError, mapping, mode, proofRef, label, preview, previewing, progress, sending, started, loadFile, setMapping, setMode, setProofRef, setLabel, runPreview, start, audienceValues };
+  return { fileName, csv, fileError, mapping, mode, proofRef, label, preview, previewing, progress, sending, started, refusal, loadFile, setMapping, setMode, setProofRef, setLabel, runPreview, start, audienceValues };
 }

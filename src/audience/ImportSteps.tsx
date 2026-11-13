@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from 'react';
 import { useGrowth } from '../GrowthProvider';
-import { Button, ChoiceGroup, Field, INPUT, Notice, Pill } from '../ui/primitives';
+import { Button, ChoiceGroup, Field, INPUT, LoadError, Notice, Pill } from '../ui/primitives';
 import type { ImportFlow } from './useImportFlow';
 
 /**
@@ -168,6 +168,7 @@ function PreviewStep({ flow }: { flow: ImportFlow }) {
         <p className="gr-hint">Only the people under &quot;Can be asked&quot; are kept. Everyone else is counted here and forgotten: we do not store details of people we may not contact.</p>
       </Lead>
       <Button tone="primary" disabled={flow.previewing} onClick={flow.runPreview}>{flow.previewing ? 'Checking…' : flow.preview ? 'Check again' : 'Check the list'}</Button>
+      {flow.refusal?.step === 'preview' ? <LoadError message={flow.refusal.message} /> : null}
       {flow.preview ? (
         <>
           <ul className="gr-list">
@@ -208,6 +209,7 @@ function StartStep({ flow, hostSubmits }: { flow: ImportFlow; hostSubmits?: bool
         </p>
       </Lead>
       {flow.progress ? <Notice>Sent {flow.progress.sent.toLocaleString()} of {flow.progress.total.toLocaleString()} rows.</Notice> : null}
+      {flow.refusal?.step === 'start' ? <LoadError message={flow.refusal.message} /> : null}
       {hostSubmits ? null : (
         <Button tone="primary" disabled={can === 0 || flow.sending} onClick={flow.start}>
           {flow.sending ? 'Sending rows…' : startLabel(can)}

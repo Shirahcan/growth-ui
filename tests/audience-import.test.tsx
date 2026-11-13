@@ -82,6 +82,53 @@ describe('the import flow', () => {
     expect(screen.getByText(`${(IMPORT_CHUNK + 1).toLocaleString()} people are waiting to be asked.`)).toBeTruthy();
   });
 
+  it('a refused start says the service reason on the step, not only to the host, and clears on retry', async () => {
+    const words = 'This product has not set how long unanswered imported addresses are kept. Set it in Growth settings before importing a list.';
+    let refuse = true;
+    const onError = vi.fn();
+    const request = vi.fn(async (_m: string, path: string) => {
+      if (path === 'audience/imports/preview') return { data: { counts: { can_ask: 1, already_subscribed: 0, suppressed: 0, duplicates: 0, invalid_email: 0, no_consent: 0 }, reasons: {} } };
+      if (path === 'audience/imports' && refuse) throw Object.assign(new Error('Request failed with status code 422'), { response: { status: 422, data: { message: words, errors: { import: [words] } } } });
+      if (path === 'audience/imports') return { data: { import: { uuid: 'b-2' } } };
+      if (path.endsWith('/start')) return { data: { import: { uuid: 'b-2', imported_count: 1 } } };
+      return { data: {} };
+    });
+    render(
+      <GrowthProvider product="portify" request={request as never} hrefFor={hrefFor as never} onError={onError} onNotice={vi.fn()} words={{ product: 'Portify' }}>
+        <Harness />
+      </GrowthProvider>,
+    );
+    await act(() => flow.loadFile(fileOf(1)));
+    act(() => flow.setMode('repermission'));
+    await act(() => flow.runPreview());
+
+    await act(() => flow.start());
+    expect(screen.getByRole('alert').textContent).toBe(words);
+    expect(onError).not.toHaveBeenCalled();
+
+    refuse = false; // the admin set the period in Growth settings
+    await act(() => flow.start());
+    await waitFor(() => expect(flow.started).toEqual({ uuid: 'b-2', imported: 1 }));
+    expect(screen.queryByText(words)).toBeNull();
+  });
+
+  it('a failure that is not a refusal still goes to the host', async () => {
+    const onError = vi.fn();
+    const request = vi.fn(async () => {
+      throw Object.assign(new Error('Request failed with status code 500'), { response: { status: 500, data: { message: 'Server error' } } });
+    });
+    render(
+      <GrowthProvider product="portify" request={request as never} hrefFor={hrefFor as never} onError={onError} onNotice={vi.fn()} words={{ product: 'Portify' }}>
+        <Harness />
+      </GrowthProvider>,
+    );
+    await act(() => flow.loadFile(fileOf(1)));
+    act(() => flow.setMode('repermission'));
+    await act(() => flow.runPreview());
+    expect(onError).toHaveBeenCalledTimes(1);
+    expect(flow.refusal).toBeNull();
+  });
+
   it('a written-consent list needs the proof, and without a host upload says why it cannot be used', async () => {
     mount(vi.fn());
     await act(() => flow.loadFile(fileOf(1)));
