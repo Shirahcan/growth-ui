@@ -1,4 +1,4 @@
-import { createContext, useContext, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+import { createContext, useContext, useMemo, useRef, useState, type ComponentType, type CSSProperties, type ReactNode } from 'react';
 import { createChromeStore, type ChromeStore } from './shell/chromeStore';
 import { tabsFor, type GrowthTab, type GrowthTabKey } from './shell/tabs';
 import { themeStyle, type GrowthTheme, type GrowthVariant } from './theme';
@@ -24,6 +24,27 @@ export interface GrowthProduct {
  */
 export type GrowthScope = { kind: 'product'; product: string } | { kind: 'across' };
 
+/** The host's own link, so moving between Growth screens stays inside the app (Portify: next/link). */
+export type GrowthLink = ComponentType<{ href: string; className?: string; title?: string; children: ReactNode }>;
+
+/** The product's own words: data from the host, never a product name in the package. */
+export interface GrowthWords {
+  /** The assistant that writes ideas ("Porter", "Mira"). */
+  assistant: string;
+  /** Audience key => what the product calls it ("applicants" => "Moving to Canada"). */
+  audiences: Record<string, string>;
+}
+
+const DEFAULT_WORDS: GrowthWords = { assistant: 'The assistant', audiences: {} };
+
+function PlainLink({ href, className, title, children }: { href: string; className?: string; title?: string; children: ReactNode }) {
+  return (
+    <a href={href} className={className} title={title}>
+      {children}
+    </a>
+  );
+}
+
 interface GrowthContextValue {
   request: GrowthRequest;
   scope: GrowthScope;
@@ -37,6 +58,11 @@ interface GrowthContextValue {
   notify: (message: string) => void;
   /** The theme as CSS variables, re-applied by modals and menus drawn outside the provider (portals). */
   vars: CSSProperties;
+  /** A link inside the host's app. */
+  Link: GrowthLink;
+  /** A service link relative to the Growth area ("blog/<uuid>", "plan?tab=radar") as the host's href. */
+  areaHref: (relative: string) => string;
+  words: GrowthWords;
   variant: GrowthVariant;
   chrome: ChromeStore;
 }
@@ -60,11 +86,15 @@ export interface GrowthProviderProps {
   onError: (error: unknown) => void;
   /** The host's success surface (Portify: `toast.success`). Unset = the notice is not shown. */
   onNotice?: (message: string) => void;
+  /** The host's link component (Portify: next/link). Unset = a plain anchor. */
+  Link?: GrowthLink;
+  /** The product's words (assistant name, audience labels). */
+  words?: Partial<GrowthWords>;
   children: ReactNode;
 }
 
 export function GrowthProvider(props: GrowthProviderProps) {
-  const { request, product, estate, hrefFor, enabledTabs, theme, variant = 'glass', onError, onNotice, children } = props;
+  const { request, product, estate, hrefFor, enabledTabs, theme, variant = 'glass', onError, onNotice, Link, words, children } = props;
 
   if ((product === undefined) === (estate === undefined)) {
     throw new Error('GrowthProvider: pass exactly one of `product` (a product host) or `estate` (the portal).');
@@ -96,9 +126,12 @@ export function GrowthProvider(props: GrowthProviderProps) {
       notify: (message: string) => onNotice?.(message),
       vars: themeStyle(theme),
       variant,
+      Link: Link ?? PlainLink,
+      areaHref: (relative: string) => areaHref(hrefFor, relative),
+      words: { ...DEFAULT_WORDS, ...(words ?? {}), audiences: { ...DEFAULT_WORDS.audiences, ...(words?.audiences ?? {}) } },
       chrome: chromeRef.current as ChromeStore,
     };
-  }, [request, estate, scopeKey, enabledTabs, hrefFor, onError, onNotice, theme, variant]);
+  }, [request, estate, scopeKey, enabledTabs, hrefFor, onError, onNotice, theme, variant, Link, words]);
 
   return (
     <GrowthContext.Provider value={value}>
@@ -107,6 +140,17 @@ export function GrowthProvider(props: GrowthProviderProps) {
       </div>
     </GrowthContext.Provider>
   );
+}
+
+/**
+ * The service links relative to the Growth area: the first segment is a tab ("blog", "plan"), the rest
+ * follows the tab's own href. "plan?tab=radar" => hrefFor('plan') + "?tab=radar".
+ */
+export function areaHref(hrefFor: (tab: GrowthTabKey) => string, relative: string): string {
+  const match = /^([a-z-]+)(.*)$/.exec(relative.replace(/^\/+/, ''));
+  if (!match) return hrefFor('plan' as GrowthTabKey);
+
+  return hrefFor(match[1] as GrowthTabKey) + (match[2] ?? '');
 }
 
 export function withAsProduct(path: string, product: string): string {

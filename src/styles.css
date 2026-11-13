@@ -200,3 +200,73 @@
   border-top: 1px solid var(--gr-border, #e2e8f0);
   padding: 0.75rem 1.5rem;
 }
+
+/* ---- Plan views (G3e2) ---- */
+
+.gr-stack { display: flex; flex-direction: column; gap: 1rem; }
+.gr-row-between { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.75rem; }
+.gr-month-nav { display: flex; align-items: center; gap: 0.25rem; }
+.gr-month-label { min-width: 8.5rem; text-align: center; font-size: 0.875rem; font-weight: 600; color: var(--gr-ink, #0f172a); }
+.gr-section-title { margin: 0 0 0.5rem; font-size: 1rem; font-weight: 700; color: var(--gr-ink, #0f172a); }
+.gr-warning {
+  margin: 0;
+  border: 1px solid #fef3c7;
+  border-radius: 1rem;
+  background: #fffbeb;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  color: #92400e;
+}
+
+.gr-list { margin: 0.5rem 0 0; padding: 0; list-style: none; }
+.gr-list-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 0;
+  border-top: 1px solid var(--gr-border, #e2e8f0);
+}
+.gr-list-row:first-child { border-top: 0; }
+.gr-dim { opacity: 0.6; }
+.gr-grow { min-width: 0; flex: 1 1 16rem; }
+.gr-row-title { margin: 0; font-weight: 600; color: var(--gr-ink, #0f172a); }
+.gr-row-detail { margin: 0.125rem 0 0; font-size: 0.875rem; color: var(--gr-ink-muted, #475569); }
+.gr-pills { display: flex; flex-wrap: wrap; align-items: center; gap: 0.375rem; margin-top: 0.375rem; }
+.gr-row-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
+.gr-row-actions .gr-input { width: auto; }
+.gr-sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+a.gr-button { text-decoration: none; }
+
+/* The month's grid scrolls sideways inside its card, never the page. */
+.gr-calendar-scroll { overflow-x: auto; }
+.gr-calendar {
+  display: grid;
+  min-width: 46rem;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 1px;
+  overflow: hidden;
+  border-radius: 1rem;
+  background: var(--gr-border, #e2e8f0);
+}
+.gr-calendar-head { background: var(--gr-dialog-surface, #fff); padding: 0.375rem 0.5rem; text-align: center; font-size: 0.75rem; font-weight: 600; color: var(--gr-ink-muted, #64748b); }
+.gr-calendar-day { min-height: 6rem; display: flex; flex-direction: column; gap: 0.25rem; padding: 0.375rem; background: var(--gr-dialog-surface, #fff); }
+.gr-calendar-out { background: var(--gr-surface-muted, #f8fafc); }
+.gr-calendar-date { margin: 0; font-size: 0.75rem; color: var(--gr-ink-muted, #64748b); }
+.gr-chip {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  border-radius: 0.5rem;
+  padding: 0.125rem 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-decoration: none;
+  outline: none;
+}
+.gr-chip-idea { background: #e9ecff; color: #2f43b8; }
+.gr-chip-post { background: #ecfdf5; color: #047857; }
+.gr-chip-campaign { background: #fffbeb; color: #b45309; }
+.gr-chip-signal { background: #fff1f2; color: #be123c; }
