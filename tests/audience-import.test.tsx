@@ -89,4 +89,18 @@ describe('the import flow', () => {
     expect(screen.getByText(/does not take a proof upload yet/)).toBeTruthy();
     expect(importSteps(flow)[2]?.validate()).toBe('Attach the proof of their written yes.');
   });
+
+  it('inside a host shell the last step draws no start button of its own', async () => {
+    function Hosted() {
+      flow = useImportFlow();
+      return <>{importSteps(flow, { hostSubmits: true })[4]?.render()}</>;
+    }
+    render(
+      <GrowthProvider product="portify" request={vi.fn() as never} hrefFor={hrefFor as never} onError={vi.fn()} onNotice={vi.fn()} words={{ product: 'Portify' }}>
+        <Hosted />
+      </GrowthProvider>,
+    );
+    expect(screen.queryByRole('button', { name: /Start asking/ })).toBeNull();
+    expect(screen.getByText(/waiting to be asked/)).toBeTruthy();
+  });
 });

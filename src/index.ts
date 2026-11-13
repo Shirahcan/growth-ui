@@ -36,7 +36,7 @@ export type { SavedAudience } from './audience/SegmentsView';
 export { TargetPicker } from './audience/TargetPicker';
 export { ImportsView } from './audience/ImportsView';
 export type { ImportBatch } from './audience/ImportsView';
-export { importSteps } from './audience/ImportSteps';
+export { importSteps, startLabel } from './audience/ImportSteps';
 export type { ImportStep, ImportStepsOptions } from './audience/ImportSteps';
 export { useImportFlow, CHUNK as IMPORT_CHUNK } from './audience/useImportFlow';
 export type { ConsentMode, ImportFlow, Mapping as ImportMapping, Preview as ImportPreview } from './audience/useImportFlow';

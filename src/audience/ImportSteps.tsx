@@ -20,6 +20,9 @@ export interface ImportStep {
 
 export interface ImportStepsOptions {
   uploadProof?: (file: File) => Promise<string>;
+  /** The host's wizard shell carries the start verb in its own footer (Portify's `onSubmit`): the last
+   *  step then draws no button of its own, only the summary, the progress and the result. */
+  hostSubmits?: boolean;
 }
 
 function Lead({ decides, children }: { decides: string; children?: ReactNode }) {
@@ -185,7 +188,7 @@ function PreviewStep({ flow }: { flow: ImportFlow }) {
   );
 }
 
-function StartStep({ flow }: { flow: ImportFlow }) {
+function StartStep({ flow, hostSubmits }: { flow: ImportFlow; hostSubmits?: boolean }) {
   const can = flow.preview?.counts.can_ask ?? 0;
 
   if (flow.started) {
@@ -205,12 +208,19 @@ function StartStep({ flow }: { flow: ImportFlow }) {
         </p>
       </Lead>
       {flow.progress ? <Notice>Sent {flow.progress.sent.toLocaleString()} of {flow.progress.total.toLocaleString()} rows.</Notice> : null}
-      <Button tone="primary" disabled={can === 0 || flow.sending} onClick={flow.start}>
-        {flow.sending ? 'Sending rows…' : `Start asking ${can.toLocaleString()} ${can === 1 ? 'person' : 'people'}`}
-      </Button>
-      <p className="gr-hint">If sending stops part way, press the button again: it carries on where it stopped.</p>
+      {hostSubmits ? null : (
+        <Button tone="primary" disabled={can === 0 || flow.sending} onClick={flow.start}>
+          {flow.sending ? 'Sending rows…' : startLabel(can)}
+        </Button>
+      )}
+      <p className="gr-hint">If sending stops part way, start again: it carries on where it stopped.</p>
     </div>
   );
+}
+
+/** The start verb, the same words wherever it is drawn (the step's own button or the host's footer). */
+export function startLabel(canAsk: number): string {
+  return `Start asking ${canAsk.toLocaleString()} ${canAsk === 1 ? 'person' : 'people'}`;
 }
 
 export function importSteps(flow: ImportFlow, options: ImportStepsOptions = {}): ImportStep[] {
@@ -229,6 +239,6 @@ export function importSteps(flow: ImportFlow, options: ImportStepsOptions = {}):
       validate: () => (flow.preview === null ? 'Check the list first.' : flow.preview.counts.can_ask === 0 ? 'Nobody on this list can be asked, so there is nothing to start.' : null),
       render: () => <PreviewStep flow={flow} />,
     },
-    { id: 'start', title: 'Start the list', validate: () => null, render: () => <StartStep flow={flow} /> },
+    { id: 'start', title: 'Start the list', validate: () => null, render: () => <StartStep flow={flow} hostSubmits={options.hostSubmits} /> },
   ];
 }
