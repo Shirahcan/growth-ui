@@ -116,8 +116,8 @@ export function PlanIdeasView({ month, onMonth, onStartDraft }: PlanIdeasViewPro
           <Loading label={`${words.assistant} is reading what people asked this month…`} />
         ) : (
           <>
-            {(plan.notices ?? []).map((n) => (
-              <Notice key={n}>{n}</Notice>
+            {(plan.notices ?? []).map((n, i) => (
+              <Notice key={`${i}-${n}`}>{n}</Notice>
             ))}
             {plan.ideas.length === 0 ? (
               <p className="gr-empty">Nothing to suggest yet. Ideas come from questions {words.assistant} could not answer, official changes and what people ask for.</p>
