@@ -7,3 +7,6 @@ export type { GrowthTab, GrowthTabKey } from './shell/tabs';
 export { ProductPicker } from './shell/ProductPicker';
 export { DEFAULT_THEME, themeStyle } from './theme';
 export type { GrowthTheme, GrowthVariant } from './theme';
+export { Button, Card, ChoiceGroup, Dialog, Empty, Field, INPUT, Kebab, LoadError, Loading, Notice, Pill, copyText } from './ui/primitives';
+export type { KebabItem } from './ui/primitives';
+export { GrowthPortal } from './ui/GrowthPortal';

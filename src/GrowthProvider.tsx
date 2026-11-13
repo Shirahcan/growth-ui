@@ -1,4 +1,4 @@
-import { createContext, useContext, useMemo, useRef, useState, type ReactNode } from 'react';
+import { createContext, useContext, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { createChromeStore, type ChromeStore } from './shell/chromeStore';
 import { tabsFor, type GrowthTab, type GrowthTabKey } from './shell/tabs';
 import { themeStyle, type GrowthTheme, type GrowthVariant } from './theme';
@@ -33,6 +33,11 @@ interface GrowthContextValue {
   tabs: GrowthTab[];
   hrefFor: (tab: GrowthTabKey) => string;
   onError: (error: unknown) => void;
+  /** A success notice, through the host's own surface (Portify: a success toast). */
+  notify: (message: string) => void;
+  /** The theme as CSS variables, re-applied by modals and menus drawn outside the provider (portals). */
+  vars: CSSProperties;
+  variant: GrowthVariant;
   chrome: ChromeStore;
 }
 
@@ -53,11 +58,13 @@ export interface GrowthProviderProps {
   variant?: GrowthVariant;
   /** The host's error surface (Portify: reportErrorToPorter). Never a generic toast. */
   onError: (error: unknown) => void;
+  /** The host's success surface (Portify: `toast.success`). Unset = the notice is not shown. */
+  onNotice?: (message: string) => void;
   children: ReactNode;
 }
 
 export function GrowthProvider(props: GrowthProviderProps) {
-  const { request, product, estate, hrefFor, enabledTabs, theme, variant = 'glass', onError, children } = props;
+  const { request, product, estate, hrefFor, enabledTabs, theme, variant = 'glass', onError, onNotice, children } = props;
 
   if ((product === undefined) === (estate === undefined)) {
     throw new Error('GrowthProvider: pass exactly one of `product` (a product host) or `estate` (the portal).');
@@ -86,13 +93,16 @@ export function GrowthProvider(props: GrowthProviderProps) {
       tabs: tabsFor(enabledTabs),
       hrefFor,
       onError,
+      notify: (message: string) => onNotice?.(message),
+      vars: themeStyle(theme),
+      variant,
       chrome: chromeRef.current as ChromeStore,
     };
-  }, [request, estate, scopeKey, enabledTabs, hrefFor, onError]);
+  }, [request, estate, scopeKey, enabledTabs, hrefFor, onError, onNotice, theme, variant]);
 
   return (
     <GrowthContext.Provider value={value}>
-      <div className="gr-root" data-variant={variant} style={themeStyle(theme)}>
+      <div className="gr-root" data-variant={variant} style={value.vars}>
         {children}
       </div>
     </GrowthContext.Provider>

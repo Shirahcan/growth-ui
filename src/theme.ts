@@ -10,6 +10,8 @@ export interface GrowthTheme {
   accentInk: string;
   surface: string;
   surfaceMuted: string;
+  /** A modal's own solid surface: the card surface may be translucent glass, which would show the page through a form. */
+  dialogSurface: string;
   border: string;
   ink: string;
   inkMuted: string;
@@ -27,6 +29,7 @@ const TOKEN_VARS: Record<keyof GrowthTheme, string> = {
   accentInk: '--gr-accent-ink',
   surface: '--gr-surface',
   surfaceMuted: '--gr-surface-muted',
+  dialogSurface: '--gr-dialog-surface',
   border: '--gr-border',
   ink: '--gr-ink',
   inkMuted: '--gr-ink-muted',
@@ -41,6 +44,7 @@ export const DEFAULT_THEME: GrowthTheme = {
   accentInk: '#ffffff',
   surface: 'rgba(255, 255, 255, 0.7)',
   surfaceMuted: '#f8fafc',
+  dialogSurface: '#ffffff',
   border: '#e2e8f0',
   ink: '#0f172a',
   inkMuted: '#64748b',
