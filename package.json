@@ -1,6 +1,6 @@
 {
   "name": "@shirahcan/growth-ui",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "private": true,
   "description": "Admin screens and public components for growth-service, for every product and the shirah.co super admin. Takes its product from context, hands its chrome to the host's top bar, and calls the service only through the host's proxy.",
   "type": "module",

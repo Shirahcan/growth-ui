@@ -51,9 +51,15 @@ function evidenceLines(t: Sheet['trail'][number]): string[] {
   ].filter((l): l is string => l !== null);
 }
 
-/** The receipt as a file name a person can tell apart in a folder: whose, and the day it was made. */
+/**
+ * The receipt as a file name a person can tell apart in a folder: whose, and the day it was made, in THEIR
+ * calendar. (`toISOString` gave the UTC day: just after midnight in Lagos a receipt made on the 14th was
+ * named the 13th.)
+ */
 export function receiptFileName(email: string, today: Date = new Date()): string {
-  return `consent-receipt-${email.replace(/[^a-z0-9@._-]+/gi, '_')}-${today.toISOString().slice(0, 10)}.txt`;
+  const day = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
+  return `consent-receipt-${email.replace(/[^a-z0-9@._-]+/gi, '_')}-${day}.txt`;
 }
 
 export function PersonSheet({ uuid, onClose, onChanged, extras }: PersonSheetProps) {

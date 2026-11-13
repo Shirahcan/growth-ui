@@ -64,7 +64,7 @@ describe('the audience people', () => {
     const signedUp = lines.findIndex((l) => l.endsWith('Signed up (footer)'));
     expect(lines.slice(signedUp + 1, signedUp + 4)).toEqual(['    IP address: 203.0.113.9', '    Browser: Firefox', '    Wording shown: footer-v2']);
     expect(lines.filter((l) => l.startsWith('    '))).toHaveLength(3); // a record that kept nothing adds no lines
-    expect(receiptFileName('Ana O+K@example.com', new Date('2026-11-14T08:00:00Z'))).toBe('consent-receipt-Ana_O_K@example.com-2026-11-14.txt');
+    expect(receiptFileName('Ana O+K@example.com', new Date(2026, 10, 14, 0, 30) /* half past midnight, local */)).toBe('consent-receipt-Ana_O_K@example.com-2026-11-14.txt');
   });
 
   it('the sheet menu downloads the receipt from the evidence read', async () => {
