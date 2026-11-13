@@ -28,6 +28,8 @@ export interface TrailEntry {
   what: string;
   basis: string | null;
   import_batch_ref: string | null;
+  /** Only on the receipt read (`?with=evidence`): what the record kept as proof. */
+  evidence?: { ip: string | null; user_agent: string | null; wording_version: string | null };
 }
 
 /** The person sheet (`GET audience/subscribers/{uuid}`). */

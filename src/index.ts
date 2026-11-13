@@ -25,7 +25,7 @@ export type { RadarSettingsViewProps } from './settings/RadarSettingsView';
 export type { RadarCountry, RadarSettings, WatchedSource } from './settings/types';
 export { PeopleView } from './audience/PeopleView';
 export type { PeopleViewProps } from './audience/PeopleView';
-export { PersonSheet, receiptText } from './audience/PersonSheet';
+export { PersonSheet, receiptFileName, receiptText } from './audience/PersonSheet';
 export type { PersonSheetProps } from './audience/PersonSheet';
 export { LapsingCard } from './audience/LapsingCard';
 export { AudienceSettingsView } from './audience/AudienceSettingsView';

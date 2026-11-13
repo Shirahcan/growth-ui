@@ -33,10 +33,27 @@ export function receiptText(p: Sheet, productName: string): string {
     p.blocked ? `Blocked from email: ${p.blocked}` : 'Not blocked from email',
     '',
     'History, newest first:',
-    ...p.trail.map((t) => `- ${t.at ? momentLabel(t.at) : 'Date not recorded'}: ${t.what}`),
+    ...p.trail.flatMap((t) => [`- ${t.at ? momentLabel(t.at) : 'Date not recorded'}: ${t.what}`, ...evidenceLines(t)]),
   ];
 
   return lines.join('\n');
+}
+
+/** What a record kept as proof, one indented line each; nothing when the read carried no evidence. */
+function evidenceLines(t: Sheet['trail'][number]): string[] {
+  const e = t.evidence;
+  if (!e) return [];
+
+  return [
+    e.ip ? `    IP address: ${e.ip}` : null,
+    e.user_agent ? `    Browser: ${e.user_agent}` : null,
+    e.wording_version ? `    Wording shown: ${e.wording_version}` : null,
+  ].filter((l): l is string => l !== null);
+}
+
+/** The receipt as a file name a person can tell apart in a folder: whose, and the day it was made. */
+export function receiptFileName(email: string, today: Date = new Date()): string {
+  return `consent-receipt-${email.replace(/[^a-z0-9@._-]+/gi, '_')}-${today.toISOString().slice(0, 10)}.txt`;
 }
 
 export function PersonSheet({ uuid, onClose, onChanged, extras }: PersonSheetProps) {
@@ -61,6 +78,36 @@ export function PersonSheet({ uuid, onClose, onChanged, extras }: PersonSheetPro
       live = false;
     };
   }, [request, onError, uuid, reloadKey]);
+
+  /** The receipt read: the same person plus what each record kept as proof (IP, browser, wording shown). */
+  async function receipt(): Promise<string | null> {
+    try {
+      const full = unwrap(await request<Envelope<{ person: Sheet }>>('GET', `audience/subscribers/${uuid}?with=evidence`)).person;
+      return receiptText(full, productName);
+    } catch (e) {
+      onError(e);
+      return null;
+    }
+  }
+
+  async function downloadReceipt(email: string) {
+    const text = await receipt();
+    if (text === null) return;
+    const url = URL.createObjectURL(new Blob([text], { type: 'text/plain;charset=utf-8' }));
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = receiptFileName(email);
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    notify('Consent receipt downloaded.');
+  }
+
+  async function copyReceipt() {
+    const text = await receipt();
+    if (text !== null) await copy(text, 'Consent receipt copied.');
+  }
 
   async function copy(text: string, done: string) {
     if (await copyText(text)) notify(done);
@@ -97,7 +144,8 @@ export function PersonSheet({ uuid, onClose, onChanged, extras }: PersonSheetPro
               label={`Actions for ${person.email}`}
               items={[
                 { label: 'Copy address', onSelect: () => copy(person.email, 'Address copied.') },
-                { label: 'Copy consent receipt', onSelect: () => copy(receiptText(person, productName), 'Consent receipt copied.') },
+                { label: 'Copy consent receipt', onSelect: () => void copyReceipt() },
+                { label: 'Download consent receipt', onSelect: () => void downloadReceipt(person.email) },
                 { label: 'Stop emailing', danger: true, hidden: !canEdit || person.status === 'unsubscribed', onSelect: () => setConfirming(true) },
               ]}
             />

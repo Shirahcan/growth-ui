@@ -1,6 +1,6 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { AudienceSettingsView, GrowthProvider, LapsingCard, PeopleView, receiptText } from '../src';
+import { AudienceSettingsView, GrowthProvider, LapsingCard, PeopleView, receiptFileName, receiptText } from '../src';
 
 const hrefFor = (tab: string) => `/admin/growth/${tab}`;
 
@@ -50,6 +50,52 @@ describe('the audience people', () => {
     expect(text).toContain('Basis: Said yes and confirmed by email');
     expect(text).toContain('First recorded at: footer (IP address kept as evidence)');
     expect(text.split('\n').filter((l) => l.startsWith('- '))).toHaveLength(2);
+  });
+
+  it('the receipt read lists what each record kept as proof, and the file is named for whom and when', () => {
+    const withEvidence = {
+      ...sheet,
+      trail: [
+        { ...sheet.trail[0], evidence: { ip: null, user_agent: null, wording_version: null } },
+        { ...sheet.trail[1], evidence: { ip: '203.0.113.9', user_agent: 'Firefox', wording_version: 'footer-v2' } },
+      ],
+    };
+    const lines = receiptText(withEvidence as never, 'Portify').split('\n');
+    const signedUp = lines.findIndex((l) => l.endsWith('Signed up (footer)'));
+    expect(lines.slice(signedUp + 1, signedUp + 4)).toEqual(['    IP address: 203.0.113.9', '    Browser: Firefox', '    Wording shown: footer-v2']);
+    expect(lines.filter((l) => l.startsWith('    '))).toHaveLength(3); // a record that kept nothing adds no lines
+    expect(receiptFileName('Ana O+K@example.com', new Date('2026-11-14T08:00:00Z'))).toBe('consent-receipt-Ana_O_K@example.com-2026-11-14.txt');
+  });
+
+  it('the sheet menu downloads the receipt from the evidence read', async () => {
+    const created: Blob[] = [];
+    const createObjectURL = vi.fn((b: Blob) => (created.push(b), 'blob:receipt'));
+    Object.assign(URL, { createObjectURL, revokeObjectURL: vi.fn() });
+    const notice = vi.fn();
+    const request = vi.fn(async (method: string, path: string) => {
+      if (method === 'GET' && path.startsWith('audience/subscribers?')) return { data: { people: [ana], meta: { current_page: 1, last_page: 1, total: 1 } } };
+      if (path.endsWith('?with=evidence')) return { data: { person: { ...sheet, trail: [{ ...sheet.trail[1], evidence: { ip: '203.0.113.9', user_agent: null, wording_version: null } }] } } };
+      return { data: { person: sheet } };
+    });
+    render(
+      <GrowthProvider product="portify" request={request as never} hrefFor={hrefFor as never} onError={vi.fn()} onNotice={notice} words={{ audiences: { applicants: 'Moving to Canada' }, product: 'Portify' }}>
+        <PeopleView />
+      </GrowthProvider>,
+    );
+    fireEvent.click(await screen.findByText('ana@example.com'));
+    await screen.findByText('Said yes and confirmed by email');
+    fireEvent.click(within(screen.getByRole('dialog')).getByLabelText('Actions for ana@example.com')); // the sheet's menu, not the row's
+    expect(screen.getAllByRole('menuitem').map((i) => i.textContent)).toEqual(['Copy address', 'Copy consent receipt', 'Download consent receipt', 'Stop emailing']);
+    fireEvent.click(screen.getByText('Download consent receipt'));
+
+    await waitFor(() => expect(notice).toHaveBeenCalledWith('Consent receipt downloaded.'));
+    expect(request.mock.calls.map((c) => c[1])).toContainEqual(expect.stringMatching(/\?with=evidence$/));
+    const body = await new Promise<string>((resolve) => {
+      const reader = new FileReader(); // jsdom's Blob has no text()
+      reader.onload = () => resolve(String(reader.result));
+      reader.readAsText(created[0] as Blob);
+    });
+    expect(body).toContain('IP address: 203.0.113.9');
   });
 
   it('an imported person came from a named list; they never signed up', () => {
