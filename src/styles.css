@@ -303,8 +303,10 @@ a.gr-button { text-decoration: none; }
 .gr-trail-what { font-size: 0.875rem; color: var(--gr-ink, #0f172a); }
 
 /* G4e4b1: the people list's filter row and its pager. */
-.gr-filters { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
-.gr-filters .gr-input { width: auto; min-width: 14rem; flex: 1 1 14rem; }
+.gr-filters { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 0.75rem; }
+/* The FIELD takes the row's width; the input inside it stays a normal one-line control. (Sizing the input
+   itself made its flex basis its HEIGHT, because a field stacks its label above its input.) */
+.gr-filters > .gr-field { flex: 1 1 14rem; min-width: 14rem; }
 .gr-pager { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; font-size: 0.8125rem; color: var(--gr-ink-muted, #64748b); }
 .gr-row-button { all: unset; cursor: pointer; display: block; min-width: 0; }
 .gr-row-button:focus-visible { outline: 2px solid var(--gr-accent, #4361ee); outline-offset: 2px; border-radius: 0.5rem; }
