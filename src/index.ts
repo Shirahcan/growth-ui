@@ -20,3 +20,6 @@ export type { PlanIdea, PlanIdeas, PlanCalendarItem, RadarSignal, RadarStalePost
 export { thisMonth, shiftMonth } from './plan/dates';
 export { areaHref } from './GrowthProvider';
 export type { GrowthLink, GrowthWords } from './GrowthProvider';
+export { RadarSettingsView } from './settings/RadarSettingsView';
+export type { RadarSettingsViewProps } from './settings/RadarSettingsView';
+export type { RadarCountry, RadarSettings, WatchedSource } from './settings/types';

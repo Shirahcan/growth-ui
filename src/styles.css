@@ -270,3 +270,21 @@ a.gr-button { text-decoration: none; }
 .gr-chip-post { background: #ecfdf5; color: #047857; }
 .gr-chip-campaign { background: #fffbeb; color: #b45309; }
 .gr-chip-signal { background: #fff1f2; color: #be123c; }
+
+/* ---- Radar settings (G3e5) ---- */
+
+.gr-settings-block { border-top: 1px solid var(--gr-border, #e2e8f0); padding-top: 1rem; }
+.gr-check { display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; color: var(--gr-ink, #0f172a); }
+.gr-check input { width: 1rem; height: 1rem; accent-color: var(--gr-accent, #4361ee); }
+.gr-pill-remove {
+  margin-left: 0.25rem;
+  border: 0;
+  background: transparent;
+  color: var(--gr-ink-muted, #64748b);
+  cursor: pointer;
+  font-size: 0.875rem;
+  line-height: 1;
+  outline: none;
+}
+.gr-pill-remove:hover, .gr-pill-remove:focus-visible { color: var(--gr-danger, #dc2626); }
+.gr-grid-3 { display: grid; gap: 0.75rem; grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); }
