@@ -1,0 +1,27 @@
+/* @shirahcan/growth-ui: every rule reads the --gr-* values the provider sets (theme by values). */
+
+.gr-root {
+  font-family: var(--gr-font, inherit);
+  color: var(--gr-ink, #0f172a);
+}
+
+.gr-picker {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--gr-ink-muted, #64748b);
+}
+
+.gr-picker-select {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--gr-border, #e2e8f0);
+  border-radius: var(--gr-radius-pill, 9999px);
+  background: var(--gr-surface, #fff);
+  color: var(--gr-ink, #0f172a);
+  outline: none;
+}
+
+.gr-picker-select:focus-visible {
+  box-shadow: 0 0 0 2px var(--gr-accent, #4361ee);
+}
