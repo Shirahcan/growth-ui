@@ -134,9 +134,11 @@
 }
 .gr-kebab:hover, .gr-kebab:focus-visible { background: var(--gr-surface-muted, #f8fafc); }
 
+/* ABOVE `.gr-scrim` (100): a menu opened inside a dialog (the person sheet's kebab) is drawn on the body
+   beside the dialog, so at 90 it sat behind the backdrop, blurred and unclickable (owner, 2026-11-14). */
 .gr-menu {
   position: fixed;
-  z-index: 90;
+  z-index: 110;
   min-width: 11rem;
   overflow: hidden;
   border: 1px solid var(--gr-border, #e2e8f0);

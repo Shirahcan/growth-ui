@@ -6,18 +6,27 @@ import { GrowthPortal } from './GrowthPortal';
  *
  * ⚠ WHY NOT `absolute` INSIDE THE ROW: a list inside a scroller clips on both axes, so a menu opened on
  * the last row was cut off. On the body nothing clips it, and it opens upward when there is no room.
+ *
+ * ⚠ It opens TOWARD the middle of the screen: a trigger on the left half lines up the menu's left edge,
+ * one on the right half its right edge. A kebab at the left of a dialog's footer used to open leftward,
+ * out of the dialog and over its backdrop. (Its stacking level sits above `.gr-scrim`: see styles.css.)
  */
 export function FloatingMenu({ anchor, open, onClose, children }: { anchor: RefObject<HTMLElement | null>; open: boolean; onClose: () => void; children: ReactNode }) {
   const menu = useRef<HTMLDivElement>(null);
-  const [pos, setPos] = useState<{ top: number; right: number } | null>(null);
+  const [pos, setPos] = useState<{ top: number; left?: number; right?: number } | null>(null);
 
   useLayoutEffect(() => {
     if (!open || !anchor.current) return;
     const place = () => {
       const r = anchor.current!.getBoundingClientRect();
       const height = menu.current?.offsetHeight ?? 0;
+      const width = menu.current?.offsetWidth ?? 176;
       const below = r.bottom + 4 + height <= window.innerHeight;
-      setPos({ top: below ? r.bottom + 4 : Math.max(8, r.top - 4 - height), right: window.innerWidth - r.right });
+      const top = below ? r.bottom + 4 : Math.max(8, r.top - 4 - height);
+      const opensRight = (r.left + r.right) / 2 < window.innerWidth / 2;
+      setPos(opensRight
+        ? { top, left: Math.max(8, Math.min(r.left, window.innerWidth - width - 8)) }
+        : { top, right: Math.max(8, Math.min(window.innerWidth - r.right, window.innerWidth - width - 8)) });
     };
     place();
     // The portal mounts a frame later, so the first measurement sees no menu: measure again once it exists.
@@ -53,7 +62,7 @@ export function FloatingMenu({ anchor, open, onClose, children }: { anchor: RefO
 
   return (
     <GrowthPortal>
-      <div ref={menu} role="menu" className="gr-menu" style={{ top: pos?.top ?? -9999, right: pos?.right, visibility: pos ? 'visible' : 'hidden' }}>
+      <div ref={menu} role="menu" className="gr-menu" style={{ top: pos?.top ?? -9999, left: pos?.left, right: pos?.right, visibility: pos ? 'visible' : 'hidden' }}>
         {children}
       </div>
     </GrowthPortal>
