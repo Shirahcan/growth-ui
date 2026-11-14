@@ -39,10 +39,14 @@ describe('announcement steps', () => {
     expect(where.step().validate()).toBe('Choose at least one place it shows.');
     act(() => where.box.flow!.set({ inbox: true, ctaLabel: 'Book a call' }));
     expect(where.step().validate()).toBe('A button needs both its words and its link.');
-    act(() => where.box.flow!.set({ ctaUrl: 'http://portify.example/book' }));
-    expect(where.step().validate()).toBe('The button link must start with https://.');
-    act(() => where.box.flow!.set({ ctaUrl: 'https://portify.example/book' }));
-    expect(where.step().validate()).toBeNull();
+    for (const bad of ['http://portify.example/book', 'javascript:alert(1)', '//evil.example/x']) {
+      act(() => where.box.flow!.set({ ctaUrl: bad }));
+      expect(where.step().validate()).toBe('The button link must be a page here (starting with /) or an address starting with https://.');
+    }
+    for (const good of ['https://portify.example/book', '/consultant/billing']) {
+      act(() => where.box.flow!.set({ ctaUrl: good }));
+      expect(where.step().validate()).toBeNull();
+    }
 
     const when = harness(quiet(), 'when');
     act(() => when.box.flow!.set({ when: 'later', at: '2020-01-01T09:00' }));

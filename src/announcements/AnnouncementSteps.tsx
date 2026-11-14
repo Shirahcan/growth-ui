@@ -37,6 +37,9 @@ function Lead({ decides, children }: { decides: string; children?: ReactNode }) 
 
 const inFuture = (local: string) => local !== '' && new Date(local).getTime() > Date.now();
 
+/** A page inside the product ("/consultant/billing") or a full https address; never another scheme or "//host". */
+const linkOk = (url: string) => /^(https:\/\/\S+|\/(?!\/)\S*)$/.test(url);
+
 export function verbFor(flow: AnnouncementFlow): string {
   return flow.draft.when === 'now' ? 'Publish now' : 'Schedule';
 }
@@ -98,7 +101,7 @@ export function announcementSteps(flow: AnnouncementFlow, options: AnnouncementS
       validate: () => {
         if (d.surfaces.length === 0 && !d.inbox) return 'Choose at least one place it shows.';
         if ((d.ctaLabel.trim() === '') !== (d.ctaUrl.trim() === '')) return 'A button needs both its words and its link.';
-        if (d.ctaUrl.trim() !== '' && !d.ctaUrl.trim().startsWith('https://')) return 'The button link must start with https://.';
+        if (d.ctaUrl.trim() !== '' && !linkOk(d.ctaUrl.trim())) return 'The button link must be a page here (starting with /) or an address starting with https://.';
 
         return null;
       },
@@ -115,7 +118,7 @@ export function announcementSteps(flow: AnnouncementFlow, options: AnnouncementS
           <ChoiceGroup label="How it looks" value={d.theme} options={options.themes} onChange={(theme) => flow.set({ theme })} />
           <label className="gr-check"><input type="checkbox" checked={d.requiresAck} onChange={(e) => flow.set({ requiresAck: e.target.checked })} /> They must acknowledge it</label>
           <Field label="Button words (optional)">{(id) => <input id={id} className={INPUT} maxLength={80} value={d.ctaLabel} onChange={(e) => flow.set({ ctaLabel: e.target.value })} placeholder="Book a call" />}</Field>
-          <Field label="Button link (optional)">{(id) => <input id={id} className={INPUT} maxLength={500} value={d.ctaUrl} onChange={(e) => flow.set({ ctaUrl: e.target.value })} placeholder="https://" />}</Field>
+          <Field label="Button link (optional)">{(id) => <input id={id} className={INPUT} maxLength={500} value={d.ctaUrl} onChange={(e) => flow.set({ ctaUrl: e.target.value })} placeholder="/consultant/billing or https://..." />}</Field>
         </div>
       ),
     },
