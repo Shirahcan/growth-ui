@@ -72,7 +72,7 @@ describe('announcement steps', () => {
 
     refuse = false;
     fireEvent.click(screen.getByRole('button', { name: 'Publish now' }));
-    await waitFor(() => expect(screen.getByText(/Done\. Shown to 207 people/)).toBeTruthy());
+    await waitFor(() => expect(screen.getByText(/^Published\. It starts showing within a minute/)).toBeTruthy());
     expect(request.mock.calls.filter((c) => c[0] === 'POST' && c[1] === 'announcements')).toHaveLength(1);
     expect(request.mock.calls.some((c) => c[0] === 'PUT' && c[1] === 'announcements/a-9')).toBe(true);
     const created = request.mock.calls.find((c) => c[1] === 'announcements')![2] as unknown as { body_html: string; presentation: { channels: { email: boolean } } };

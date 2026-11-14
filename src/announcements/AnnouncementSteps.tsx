@@ -48,6 +48,8 @@ function Review({ flow, options }: { flow: AnnouncementFlow; options: Announceme
   const { words } = useGrowth();
   const d = flow.draft;
   const where = [...options.surfaces.filter((s) => d.surfaces.includes(s.value)).map((s) => s.label), ...(d.inbox ? ['An inbox message'] : [])];
+  const named = (picks: typeof d.target.include) => picks.map((p) => p.label ?? ('segment' in p ? p.segment : 'user_id' in p ? p.user_id : '')).filter(Boolean).join(', ');
+  const who = d.target.mode === 'all' ? `everyone on ${words.product}` : named(d.target.include);
 
   return (
     <div className="gr-stack">
@@ -56,12 +58,12 @@ function Review({ flow, options }: { flow: AnnouncementFlow; options: Announceme
       </Lead>
       <ul className="gr-list">
         <li className="gr-hint"><strong>{d.subject}</strong></li>
-        <li className="gr-hint">Who: {d.target.mode === 'all' ? `everyone on ${words.product}` : `${d.target.include.length} pick(s)`}{d.target.exclude.length ? `, ${d.target.exclude.length} left out` : ''}</li>
+        <li className="gr-hint">Who: {who}{d.target.exclude.length ? `, leaving out ${named(d.target.exclude)}` : ''}</li>
         <li className="gr-hint">Where: {where.join(', ')}</li>
         <li className="gr-hint">When: {d.when === 'now' ? 'now' : new Date(d.at).toLocaleString()}{d.ends ? `, until ${new Date(d.ends).toLocaleString()}` : ', until you end it'}</li>
       </ul>
       {flow.refusal ? <Notice>{flow.refusal}</Notice> : null}
-      {flow.done ? <p className="gr-row-title">Done. {announcementTiming(flow.done)}.</p> : null}
+      {flow.done ? <p className="gr-row-title">{flow.done.state === 'scheduled' ? `Scheduled. ${announcementTiming(flow.done)}.` : 'Published. It starts showing within a minute, and the list shows how many people it reached.'}</p> : null}
       {options.hostSubmits || flow.done ? null : (
         <div>
           <Button tone="primary" disabled={flow.submitting} onClick={() => void flow.submit()}>{flow.submitting ? 'Working…' : verbFor(flow)}</Button>

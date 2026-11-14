@@ -20,6 +20,8 @@ export interface Announcement {
   ended_at: string | null;
   /** How many people the product showed it to, reported back after publishing. */
   recipients_total: number;
+  /** When the product reported that reach; null until then, when the reach is unknown (never 0). */
+  delivered_at?: string | null;
 }
 
 const STATE_WORDS: Record<Announcement['state'], string> = { draft: 'Draft', scheduled: 'Scheduled', live: 'Showing now', ended: 'Ended' };
@@ -30,6 +32,13 @@ const STATE_TONE: Record<Announcement['state'], 'muted' | 'accent' | 'good' | 'b
 export function announcementTiming(a: Announcement): string {
   if (a.state === 'draft') return 'Not published yet';
   if (a.state === 'scheduled') return a.scheduled_at ? `Publishes ${momentLabel(a.scheduled_at)}` : 'Scheduled';
+  if (a.delivered_at === null) {
+    // Published, but the product has not said how many it reached yet (it does within a minute).
+    if (a.state === 'live') return 'Being delivered. The number reached shows here within a minute';
+    const over = a.ended_at ?? a.expires_at;
+
+    return over ? `Ended ${momentLabel(over)}` : 'Ended';
+  }
   const reached = a.recipients_total === 1 ? 'Shown to 1 person' : `Shown to ${a.recipients_total.toLocaleString()} people`;
   if (a.state === 'live') return a.expires_at ? `${reached}. Ends ${momentLabel(a.expires_at)}` : reached;
   const ended = a.ended_at ?? a.expires_at;

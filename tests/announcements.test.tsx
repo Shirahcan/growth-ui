@@ -59,6 +59,12 @@ describe('announcements', () => {
     expect(screen.queryByText('New announcement')).toBeNull();
   });
 
+  it('right after publishing the reach is "being delivered", never "shown to 0"', () => {
+    expect(announcementTiming({ ...base, recipients_total: 0, delivered_at: null })).toBe('Being delivered. The number reached shows here within a minute');
+    expect(announcementTiming({ ...base, state: 'ended', recipients_total: 0, delivered_at: null, ended_at: '2026-11-14T16:47:04Z' })).toMatch(/^Ended Nov 14, 2026/);
+    expect(announcementTiming({ ...base, recipients_total: 0, delivered_at: '2026-11-14T16:46:00Z' })).toBe('Shown to 0 people'); // a real 0, reported
+  });
+
   it('says the timing in words for every state', () => {
     expect(announcementTiming({ ...base, recipients_total: 1 })).toBe('Shown to 1 person');
     expect(announcementTiming({ ...base, state: 'scheduled', scheduled_at: '2026-11-20T15:00:00Z' })).toMatch(/^Publishes Nov 20, 2026/);
