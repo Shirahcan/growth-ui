@@ -79,4 +79,13 @@ describe('imported lists', () => {
     mount(sent, <ImportsView />);
     expect(await screen.findByText('Asking')).toBeTruthy();
   });
+
+  it('a started list the service cannot ask yet says Held, and why', async () => {
+    const why = 'This product has not set a daily sending cap, so nothing goes yet.';
+    const held = vi.fn(async () => ({ data: { imports: [{ ...batch, status: 'sending', first_sent_at: null, held_reason: why }] } }));
+    mount(held, <ImportsView />);
+    expect(await screen.findByText('Held')).toBeTruthy();
+    expect(screen.getByText(`Held: ${why}`)).toBeTruthy();
+    expect(screen.queryByText('Not asked yet')).toBeNull();
+  });
 });

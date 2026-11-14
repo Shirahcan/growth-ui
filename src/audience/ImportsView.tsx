@@ -20,6 +20,8 @@ export interface ImportBatch {
   purged_count: number;
   /** When the first ask email went out; null until the service's sender has really sent one. */
   first_sent_at: string | null;
+  /** Why a started list is not being asked right now (no cap, no mail account, the product's ask not shared yet). */
+  held_reason?: string | null;
   created_at: string | null;
 }
 
@@ -30,7 +32,8 @@ const STATUS_WORDS: Record<ImportBatch['status'], string> = { draft: 'Not starte
  * the first one (`first_sent_at`), the list is started but nobody has been asked, and saying "Asking" would
  * tell the admin their old clients have been written to when they have not.
  */
-function statusWords(b: ImportBatch): string {
+export function statusWords(b: ImportBatch): string {
+  if (b.status === 'sending' && b.held_reason) return 'Held';
   return b.status === 'sending' && !b.first_sent_at ? 'Not asked yet' : STATUS_WORDS[b.status];
 }
 
@@ -106,6 +109,7 @@ export function ImportsView({ newImport }: { newImport?: ReactNode }) {
                       {b.created_at ? `. Imported ${dayLabel(b.created_at)}` : ''}
                     </span>
                   </div>
+                  {b.status === 'sending' && b.held_reason ? <p className="gr-hint">Held: {b.held_reason}</p> : null}
                 </div>
                 <Kebab
                   label={`Actions for ${b.label}`}
