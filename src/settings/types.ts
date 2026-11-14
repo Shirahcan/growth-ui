@@ -29,3 +29,23 @@ export interface RadarCountry {
   code: string;
   name: string;
 }
+
+/** The brand kit's colours (G2e), each #rrggbb or unset. */
+export interface BrandKitColours {
+  accent: string | null;
+  on_accent: string | null;
+  surface: string | null;
+  text: string | null;
+}
+
+/** A product's brand kit on growth-service (G2e): unset is null and listed in `missing`, never defaulted. */
+export interface BrandKit {
+  name: string | null;
+  logo_url: string | null;
+  colours: BrandKitColours;
+  fonts: { heading: string | null; body: string | null };
+  legal: { privacy_url: string | null; terms_url: string | null };
+  /** Shown, never edited here: the product sets it where it sends from. */
+  sender: { from_name: string | null; from_address: string | null; reply_to: string | null; mailing_address: string | null };
+  missing: string[];
+}
