@@ -12,6 +12,9 @@ import type { MailingList } from './ListsView';
  *
  * ⚠ UNKNOWN IS NOT ZERO: when the product's groups cannot be read, the picker says so in the product's own
  * words instead of showing 0 people.
+ *
+ * `kind="announcement"` (G5c3d): an announcement is shown INSIDE the product to people on the platform, so only the
+ * product's groups and named people can be picked (no lists, no subscriber choices) and the product counts the reach.
  */
 export type Pick =
   | { type: 'segment'; segment: string; label?: string }
@@ -32,8 +35,9 @@ interface Estimate { reach: number; left_out: Array<{ reason: string; label: str
 
 const same = (a: Pick, b: Pick) => JSON.stringify({ ...a, label: undefined }) === JSON.stringify({ ...b, label: undefined });
 
-export function TargetPicker({ value, onChange }: { value: Target; onChange: (t: Target) => void }) {
+export function TargetPicker({ value, onChange, kind = 'newsletter' }: { value: Target; onChange: (t: Target) => void; kind?: 'newsletter' | 'announcement' }) {
   const { request, words } = useGrowth();
+  const announcement = kind === 'announcement';
   const [groups, setGroups] = useState<Group[] | null>(null);
   const [groupsDown, setGroupsDown] = useState<string | null>(null);
   const [lists, setLists] = useState<MailingList[]>([]);
@@ -48,14 +52,16 @@ export function TargetPicker({ value, onChange }: { value: Target; onChange: (t:
     request<Envelope<{ groups: Group[] }>>('GET', 'audience/platform-groups')
       .then((res) => live && setGroups(unwrap(res).groups))
       .catch((e) => live && setGroupsDown(e instanceof Error ? e.message : `${words.product}'s groups could not be read just now.`));
-    request<Envelope<{ lists: MailingList[] }>>('GET', 'audience/lists')
-      .then((res) => live && setLists(unwrap(res).lists))
-      .catch(() => live && setLists([]));
+    if (!announcement) {
+      request<Envelope<{ lists: MailingList[] }>>('GET', 'audience/lists')
+        .then((res) => live && setLists(unwrap(res).lists))
+        .catch(() => live && setLists([]));
+    }
 
     return () => {
       live = false;
     };
-  }, [request, words.product]);
+  }, [request, words.product, announcement]);
 
   useEffect(() => {
     if (q.trim().length < 2) return;
@@ -74,10 +80,13 @@ export function TargetPicker({ value, onChange }: { value: Target; onChange: (t:
   useEffect(() => {
     let live = true;
     const t = setTimeout(() => {
-      request<Envelope<Estimate>>('POST', 'audience/estimate', { definition: { target: value } })
+      const ask = announcement
+        ? request<Envelope<{ reach: number }>>('POST', 'announcements/estimate', { target: value }).then((res) => ({ reach: unwrap(res).reach, left_out: [] }))
+        : request<Envelope<Estimate>>('POST', 'audience/estimate', { definition: { target: value } }).then((res) => unwrap(res));
+      ask
         .then((res) => {
           if (!live) return;
-          setEstimate(unwrap(res));
+          setEstimate(res);
           setEstimateDown(null);
         })
         .catch((e) => live && setEstimateDown(e instanceof Error ? e.message : 'The reach could not be counted just now.'));
@@ -86,7 +95,7 @@ export function TargetPicker({ value, onChange }: { value: Target; onChange: (t:
       live = false;
       clearTimeout(t);
     };
-  }, [request, value]);
+  }, [request, value, announcement]);
 
   const has = (p: Pick) => value[side].some((x) => same(x, p));
   const toggle = (p: Pick) => onChange({ ...value, mode: side === 'include' ? 'specific' : value.mode, [side]: has(p) ? value[side].filter((x) => !same(x, p)) : [...value[side], p] });
@@ -99,7 +108,7 @@ export function TargetPicker({ value, onChange }: { value: Target; onChange: (t:
         label="Who this reaches"
         value={value.mode}
         onChange={(mode) => onChange({ ...value, mode })}
-        options={[{ value: 'all', label: 'Everyone subscribed' }, { value: 'specific', label: 'Only the people I pick' }]}
+        options={[{ value: 'all', label: announcement ? `Everyone on ${words.product}` : 'Everyone subscribed' }, { value: 'specific', label: 'Only the people I pick' }]}
       />
 
       {(['include', 'exclude'] as const).map((s) =>
@@ -122,7 +131,7 @@ export function TargetPicker({ value, onChange }: { value: Target; onChange: (t:
 
       <div>
         <p className="gr-label">{words.product}&apos;s groups</p>
-        {groupsDown ? <p className="gr-warning">{groupsDown} Lists and who people said they are still work.</p> : null}
+        {groupsDown ? <p className="gr-warning">{groupsDown}{announcement ? '' : ' Lists and who people said they are still work.'}</p> : null}
         <div className="gr-pills">
           {(groups ?? []).map((g) => {
             const p: Pick = { type: 'segment', segment: g.key, label: g.label };
@@ -147,7 +156,7 @@ export function TargetPicker({ value, onChange }: { value: Target; onChange: (t:
         </div>
       ) : null}
 
-      {Object.keys(words.audiences).length > 0 ? (
+      {!announcement && Object.keys(words.audiences).length > 0 ? (
         <div>
           <p className="gr-label">Who they said they are</p>
           <div className="gr-pills">
@@ -159,7 +168,7 @@ export function TargetPicker({ value, onChange }: { value: Target; onChange: (t:
         </div>
       ) : null}
 
-      <Field label="Find someone by name or email" hint="Only people on the product who have subscribed are reached by a newsletter.">
+      <Field label="Find someone by name or email" hint={announcement ? `Anyone with an account on ${words.product}.` : 'Only people on the product who have subscribed are reached by a newsletter.'}>
         {(id) => <input id={id} className={INPUT} value={q} onChange={(e) => { setQ(e.target.value); if (e.target.value.trim().length < 2) setFound([]); }} placeholder="At least 2 letters" />}
       </Field>
       {found.length > 0 ? (
@@ -178,7 +187,7 @@ export function TargetPicker({ value, onChange }: { value: Target; onChange: (t:
           <p className="gr-hint">Counting…</p>
         ) : (
           <>
-            <p className="gr-row-title">Reaches {estimate.reach} {estimate.reach === 1 ? 'person' : 'people'} today</p>
+            <p className="gr-row-title">Reaches {estimate.reach} {estimate.reach === 1 ? 'person' : 'people'}{announcement ? ` on ${words.product}` : ' today'}</p>
             {estimate.left_out.length > 0 ? (
               <ul className="gr-list">
                 {estimate.left_out.map((o) => (
