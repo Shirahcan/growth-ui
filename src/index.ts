@@ -46,6 +46,10 @@ export { useAnnouncementFlow, bodyHtml as announcementBodyHtml } from './announc
 export type { AnnouncementDraft, AnnouncementFlow } from './announcements/useAnnouncementFlow';
 export { NewsletterView, campaignProgress } from './campaigns/NewsletterView';
 export type { Campaign } from './campaigns/NewsletterView';
+export { campaignSteps, campaignVerb } from './campaigns/CampaignSteps';
+export type { CampaignStep, CampaignStepsOptions } from './campaigns/CampaignSteps';
+export { useCampaignFlow } from './campaigns/useCampaignFlow';
+export type { CampaignDraft, CampaignFlow, CampaignCheck } from './campaigns/useCampaignFlow';
 export { importSteps, startLabel } from './audience/ImportSteps';
 export type { ImportStep, ImportStepsOptions } from './audience/ImportSteps';
 export { useImportFlow, CHUNK as IMPORT_CHUNK } from './audience/useImportFlow';
