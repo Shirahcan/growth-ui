@@ -51,8 +51,9 @@ describe('the CTA library', () => {
     fireEvent.click(await screen.findByLabelText('Actions for Find your consultant'));
     fireEvent.click(screen.getByText('Edit'));
     fireEvent.click(await screen.findByRole('button', { name: 'Save call to action' }));
-    expect((await screen.findByRole('alert')).textContent).toBe('Give a full https address.');
-    expect(scrolled).toHaveBeenCalled();
+    // A generous wait: under a loaded machine the refusal's round trip can pass the 1s default (seen once).
+    expect((await screen.findByRole('alert', {}, { timeout: 5000 })).textContent).toBe('Give a full https address.');
+    await waitFor(() => expect(scrolled).toHaveBeenCalled(), { timeout: 5000 });
   });
 
   it('sends the second button only when it is on, and no reference for a sign-up', () => {
