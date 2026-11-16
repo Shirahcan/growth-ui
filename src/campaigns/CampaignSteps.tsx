@@ -2,6 +2,7 @@ import { useEffect, useRef, type ReactNode } from 'react';
 import { RichTextEditor } from '@shirahcan/ai-ui/editor';
 import { TargetPicker } from '../audience/TargetPicker';
 import { Button, ChoiceGroup, Field, INPUT, Notice } from '../ui/primitives';
+import { DraftFromSubject } from './DraftFromSubject';
 import { campaignProgress } from './NewsletterView';
 import type { CampaignFlow } from './useCampaignFlow';
 
@@ -25,7 +26,12 @@ export interface CampaignStep {
 export interface CampaignStepsOptions {
   /** The host's shell carries the send verb in its own footer; the last step then draws no button. */
   hostSubmits?: boolean;
-  /** The host's way to have its assistant draft the body from the subject (G5d5), shown on the content step. */
+  /**
+   * Offer "draft it from the subject" on the content step (G5d5), in the host's words, which name its assistant
+   * ("Ask Porter to draft it from the subject"). The service writes it on the click, with the product's own facts.
+   */
+  draft?: { label: string };
+  /** Anything else the host wants beside the editor; prefer `draft` for drafting. */
   draftAction?: ReactNode;
 }
 
@@ -168,6 +174,7 @@ export function campaignSteps(flow: CampaignFlow, options: CampaignStepsOptions 
           <Field label="Preview text (optional)" hint="Shown next to the subject in most inboxes.">
             {(id) => <input id={id} className={INPUT} maxLength={255} value={d.preheader} onChange={(e) => flow.set({ preheader: e.target.value })} />}
           </Field>
+          {options.draft ? <DraftFromSubject flow={flow} label={options.draft.label} /> : null}
           {options.draftAction ?? null}
           <div className="gr-stack">
             <span className="gr-row-title">The email</span>

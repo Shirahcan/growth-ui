@@ -14,10 +14,10 @@ const hrefFor = (tab: string) => `/admin/growth/${tab}`;
 type Call = [string, string, unknown?];
 
 /** Drives the steps the way a host's wizard shell does: render the current one, check it, move on. */
-function Wizard({ uuid = null }: { uuid?: string | null }) {
+function Wizard({ uuid = null, start = 0 }: { uuid?: string | null; start?: number }) {
   const flow = useCampaignFlow(uuid);
-  const steps = campaignSteps(flow);
-  const [at, setAt] = useState(0);
+  const steps = campaignSteps(flow, { draft: { label: 'Ask Porter to draft it from the subject' } });
+  const [at, setAt] = useState(start);
   const [why, setWhy] = useState<string | null>(null);
 
   if (flow.loading) return <p>Loading the draft</p>;
@@ -32,7 +32,7 @@ function Wizard({ uuid = null }: { uuid?: string | null }) {
   );
 }
 
-function mount(handler: (method: string, path: string, body?: unknown) => unknown, uuid: string | null = null) {
+function mount(handler: (method: string, path: string, body?: unknown) => unknown, uuid: string | null = null, start = 0) {
   const calls: Call[] = [];
   const request = vi.fn(async (method: string, path: string, body?: unknown) => {
     calls.push([method, path, body]);
@@ -43,7 +43,7 @@ function mount(handler: (method: string, path: string, body?: unknown) => unknow
   });
   render(
     <GrowthProvider product="portify" request={request as never} hrefFor={hrefFor as never} onError={vi.fn()} onNotice={vi.fn()} words={{ audiences: {}, product: 'Portify' }}>
-      <Wizard uuid={uuid} />
+      <Wizard uuid={uuid} start={start} />
     </GrowthProvider>,
   );
 
@@ -170,5 +170,37 @@ describe('campaignSteps', () => {
     await act(async () => { expect(await flow!.save()).toBeNull(); });
     expect(flow!.draft.campaignUuid).toBeNull();
     expect(screen.getByText(/has gone out.*This draft is no longer that campaign/)).toBeTruthy();
+  });
+
+  it('drafts the body from the subject on a click, says why it cannot, and puts back what was written', async () => {
+    let refuse = false;
+    const base = service();
+    const calls = mount((method, path, body) => {
+      if (path === 'campaigns/draft') {
+        if (refuse) return Object.assign(new Error('422'), { response: { status: 422, data: { message: 'Growth is not connected to the AI writer for this product yet.' } } });
+        return { data: { draft: { body_html: '<h2>How a draw works</h2><p>Drafted words about draws.</p>', preheader: 'What decides who is invited' } } };
+      }
+      return base(method, path, body);
+    }, null, 2);
+    const button = await screen.findByRole('button', { name: 'Ask Porter to draft it from the subject' });
+
+    fireEvent.click(button);
+    expect(await screen.findByText('Write the subject first; the draft is written from it.')).toBeTruthy();
+    expect(calls.some((c) => c[1] === 'campaigns/draft')).toBe(false);
+
+    fireEvent.change(screen.getByLabelText('Subject'), { target: { value: 'Express Entry: how a draw works' } });
+    fireEvent.change(screen.getByLabelText('The email body'), { target: { value: '<p>My own words.</p>' } });
+    await act(async () => { fireEvent.click(button); });
+    await waitFor(() => expect((screen.getByLabelText('The email body') as HTMLTextAreaElement).value).toBe('<h2>How a draw works</h2><p>Drafted words about draws.</p>'));
+    expect((screen.getByLabelText('Preview text (optional)') as HTMLInputElement).value).toBe('What decides who is invited');
+    expect(calls.find((c) => c[1] === 'campaigns/draft')?.[2]).toMatchObject({ subject: 'Express Entry: how a draw works', kind: 'regular', topic: null });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Put back what I wrote' }));
+    expect((screen.getByLabelText('The email body') as HTMLTextAreaElement).value).toBe('<p>My own words.</p>');
+
+    refuse = true;
+    await act(async () => { fireEvent.click(button); });
+    expect(await screen.findByText('Growth is not connected to the AI writer for this product yet.')).toBeTruthy();
+    expect((screen.getByLabelText('The email body') as HTMLTextAreaElement).value).toBe('<p>My own words.</p>');
   });
 });
