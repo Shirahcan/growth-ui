@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react';
-import { ChoiceGroup, Field, INPUT, Notice } from '../ui/primitives';
+import { ChoiceGroup, Field, INPUT, Notice, Refusal } from '../ui/primitives';
 import { CONSENT_METHODS } from './types';
 import { localToday, type StoryFlow } from './useStoryFlow';
 
@@ -155,7 +155,7 @@ export function storySteps(flow: StoryFlow, options: StoryStepsOptions = {}): St
           ) : (
             <Notice>It is saved as a draft. Posts can show it once the consent is recorded, it is marked ready, and someone has checked it.</Notice>
           )}
-          {flow.refusal ? <Notice>{flow.refusal}</Notice> : null}
+          <Refusal message={flow.refusal} />
           {flow.saved ? <p className="gr-row-title">Saved. {flow.saved.status === 'ready' ? 'Check it from the list (Verify) so posts can show it.' : 'Finish it from the list when the consent is in.'}</p> : null}
         </Lead>
       ),

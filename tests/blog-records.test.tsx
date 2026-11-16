@@ -40,6 +40,21 @@ describe('the CTA library', () => {
     await waitFor(() => expect(request).toHaveBeenCalledWith('DELETE', 'ctas/7', {}));
   });
 
+  it('a refused save is announced and brought into view, whatever field it is about', async () => {
+    const scrolled = vi.fn();
+    Element.prototype.scrollIntoView = scrolled;
+    const request = vi.fn(async (method: string) => {
+      if (method === 'GET') return { data: { ctas: [banner] } };
+      throw Object.assign(new Error('refused'), { response: { status: 422, data: { errors: { action_ref: ['Give a full https address.'] } } } });
+    });
+    mount(request, <CtaLibrary />);
+    fireEvent.click(await screen.findByLabelText('Actions for Find your consultant'));
+    fireEvent.click(screen.getByText('Edit'));
+    fireEvent.click(await screen.findByRole('button', { name: 'Save call to action' }));
+    expect((await screen.findByRole('alert')).textContent).toBe('Give a full https address.');
+    expect(scrolled).toHaveBeenCalled();
+  });
+
   it('sends the second button only when it is on, and no reference for a sign-up', () => {
     const draft = ctaDraftFrom(banner);
     expect(ctaBodyFrom(draft)).toMatchObject({ secondary_label: 'Sign up free on Portify', secondary_action_kind: 'link', secondary_action_ref: '/register', eyebrow: 'Ready to start?' });

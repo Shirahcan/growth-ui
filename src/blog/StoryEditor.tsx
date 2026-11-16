@@ -1,4 +1,4 @@
-import { Button, ChoiceGroup, Dialog, Field, INPUT, Notice } from '../ui/primitives';
+import { Button, ChoiceGroup, Dialog, Field, INPUT, Notice, Refusal } from '../ui/primitives';
 import { CONSENT_METHODS, type ConsentMethod, type Story, type StoryStatus } from './types';
 import { consentAt, localToday } from './useStoryFlow';
 
@@ -120,7 +120,7 @@ export function StoryEditor({ edit, onChange, onClose, onSave, refused, saving }
           {() => <ChoiceGroup label="Status" value={edit.status} options={STATUS_OPTIONS} onChange={(status) => set({ status })} />}
         </Field>
         {edit.status === 'ready' && !consentOk ? <Notice>A story is ready only once the consent is recorded: how they agreed and the day.</Notice> : null}
-        {refused ? <Notice>{refused}</Notice> : null}
+        <Refusal message={refused} />
       </div>
     </Dialog>
   );

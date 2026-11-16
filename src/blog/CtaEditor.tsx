@@ -1,5 +1,5 @@
 import { CTA_ACTIONS, CTA_STAGES, CTA_VARIANTS, type CtaActionKind, type CtaItem, type CtaStage, type CtaVariant } from './types';
-import { Button, ChoiceGroup, Dialog, Field, INPUT, Notice } from '../ui/primitives';
+import { Button, ChoiceGroup, Dialog, Field, INPUT, Notice, Refusal } from '../ui/primitives';
 
 /** What the editor holds while an admin writes a call to action (B2). */
 export interface CtaDraft {
@@ -171,7 +171,7 @@ export function CtaEditor({ draft, onChange, onClose, onSave, refused, saving }:
         <p className="gr-row-title">Preview</p>
         <CtaPreview d={draft} />
         {/* A refusal can be about any field (the headline, a reference, the second button), so it is shown once, by Save. */}
-        {refused ? <Notice>{refused}</Notice> : null}
+        <Refusal message={refused} />
       </div>
     </Dialog>
   );

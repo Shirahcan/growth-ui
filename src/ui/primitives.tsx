@@ -53,6 +53,20 @@ export function Notice({ children }: { children: ReactNode }) {
   return <p className="gr-notice">{children}</p>;
 }
 
+/**
+ * A refusal the service sent back for a dialog's Save. A dialog body scrolls (Dialog), so on a short screen the refusal
+ * can sit below the fold while the person looks at the pinned Save button and sees nothing happen: it scrolls itself
+ * into view each time a new refusal arrives, and is announced to screen readers.
+ */
+export function Refusal({ message }: { message: string | null }) {
+  const ref = useRef<HTMLParagraphElement>(null);
+  useEffect(() => {
+    if (message) ref.current?.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' });
+  }, [message]);
+
+  return message ? <p ref={ref} role="alert" className="gr-notice">{message}</p> : null;
+}
+
 export function Field({ label, hint, error, children }: { label: string; hint?: string; error?: string | null; children: (id: string) => ReactNode }) {
   const id = useId();
 

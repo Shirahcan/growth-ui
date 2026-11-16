@@ -61,6 +61,7 @@ export { momentLabel } from './plan/dates';
 
 // The CTA library and the story bank (post-and-newsletter-layouts B2, B6).
 export { CtaLibrary } from './blog/CtaLibrary';
+export { Refusal } from './ui/primitives';
 export { CtaEditor, CtaPreview, bodyFrom as ctaBodyFrom, draftFrom as ctaDraftFrom } from './blog/CtaEditor';
 export type { CtaDraft } from './blog/CtaEditor';
 export { StoryBank } from './blog/StoryBank';
