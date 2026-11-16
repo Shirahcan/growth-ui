@@ -77,8 +77,7 @@ describe('campaignSteps', () => {
 
     fireEvent.click(await screen.findByRole('radio', { name: 'Alert' }));
     await next();
-    expect(await screen.findByText(/Reaches 42 people today/)).toBeTruthy();
-    expect(screen.getByText('(only people who asked for every update)')).toBeTruthy();
+    expect(await screen.findByText('This alert goes to 42 of them today: only people who asked for every update.')).toBeTruthy();
     fireEvent.change(screen.getByLabelText('What is it about? (optional)'), { target: { value: 'ee' } });
     await next();
 
@@ -130,5 +129,46 @@ describe('campaignSteps', () => {
     await screen.findByText('It goes from news@portify.example.');
     expect(calls.some((c) => c[0] === 'POST' && c[1] === 'campaigns')).toBe(false);
     expect(calls.some((c) => c[0] === 'PUT' && c[1] === 'campaigns/c-9')).toBe(true);
+  });
+
+  it('a draft restored by the host resumes ITS campaign; a deleted one becomes new, a sent one is let go with a reason', async () => {
+    let flow: ReturnType<typeof useCampaignFlow> | null = null;
+    function Probe() {
+      flow = useCampaignFlow(null);
+      return <p>{flow.refusal ?? 'ok'}</p>;
+    }
+    const answers: Record<string, () => unknown> = {};
+    const calls: Call[] = [];
+    const request = vi.fn(async (method: string, path: string, body?: unknown) => {
+      calls.push([method, path, body]);
+      const out = (answers[`${method} ${path}`] ?? (() => ({ data: {} })))();
+      if (out instanceof Error) throw out;
+
+      return out;
+    });
+    render(
+      <GrowthProvider product="portify" request={request as never} hrefFor={hrefFor as never} onError={vi.fn()} onNotice={vi.fn()} words={{ audiences: {}, product: 'Portify' }}>
+        <Probe />
+      </GrowthProvider>,
+    );
+    const words = { subject: 'Restored', bodyHtml: '<p>Enough words to be a real email body here.</p>' };
+    const fail = (status: number, data: unknown) => Object.assign(new Error(String(status)), { response: { status, data } });
+
+    // 1. The host restores the draft it kept, id and all: a save updates that campaign.
+    act(() => flow!.set({ ...words, campaignUuid: 'c-old' }));
+    await act(async () => { expect(await flow!.save()).toBe('c-old'); });
+    expect(calls.some((c) => c[0] === 'POST' && c[1] === 'campaigns')).toBe(false);
+
+    // 2. Deleted since: the draft becomes a new campaign.
+    answers['PUT campaigns/c-old'] = () => fail(404, { message: 'That campaign was not found.' });
+    answers['POST campaigns'] = () => ({ data: { campaign: { uuid: 'c-new' } } });
+    await act(async () => { expect(await flow!.save()).toBe('c-new'); });
+    expect(flow!.draft.campaignUuid).toBe('c-new');
+
+    // 3. Sent since: let go, the admin told why; the next save makes a new one.
+    answers['PUT campaigns/c-new'] = () => fail(422, { message: 'This campaign has gone out, so it stays as the record of what people received.' });
+    await act(async () => { expect(await flow!.save()).toBeNull(); });
+    expect(flow!.draft.campaignUuid).toBeNull();
+    expect(screen.getByText(/has gone out.*This draft is no longer that campaign/)).toBeTruthy();
   });
 });

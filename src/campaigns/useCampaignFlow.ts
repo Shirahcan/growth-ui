@@ -11,6 +11,11 @@ import type { Campaign } from './NewsletterView';
  * ⚠ RESUMABLE: the draft is SAVED on the service as soon as it has a subject and a body (the checks need a saved
  * campaign, and "Continue later" needs something to come back to); every later save updates THAT draft, never makes a
  * second one. "Continue editing" from the list passes its uuid and the draft is read back as it was left.
+ *
+ * ⚠ THE SAVED CAMPAIGN'S ID LIVES IN THE DRAFT (`campaignUuid`), as in Portify's own wizard. A host shell that keeps
+ * the draft in progress ("Continue later") then restores the id with it, so coming back resumes THAT campaign instead
+ * of creating a second one at the checks step. A restored id whose campaign was deleted is replaced by a new one; one
+ * that has since been sent or scheduled is let go, and the admin is told on the step.
  */
 export interface CampaignDraft {
   kind: 'regular' | 'alert';
@@ -23,6 +28,8 @@ export interface CampaignDraft {
   when: 'now' | 'later';
   /** A `datetime-local` value, in the admin's own time. */
   at: string;
+  /** The campaign on the service this draft is (null until it is first saved). */
+  campaignUuid: string | null;
 }
 
 export interface CampaignCheck { key: string; label: string; pass: boolean; blocking: boolean; detail: string }
@@ -53,15 +60,14 @@ export interface CampaignFlow {
 }
 
 const BLANK: CampaignDraft = {
-  kind: 'regular', target: { mode: 'all', include: [], exclude: [] }, topic: '', subject: '', preheader: '', bodyHtml: '', when: 'now', at: '',
+  kind: 'regular', target: { mode: 'all', include: [], exclude: [] }, topic: '', subject: '', preheader: '', bodyHtml: '', when: 'now', at: '', campaignUuid: null,
 };
 
 interface Stored extends Campaign { body_html?: string; target?: Target | null }
 
 export function useCampaignFlow(uuid: string | null = null): CampaignFlow {
   const { request, onError } = useGrowth();
-  const [draft, setDraft] = useState<CampaignDraft>(BLANK);
-  const [saved, setSaved] = useState<string | null>(uuid);
+  const [draft, setDraft] = useState<CampaignDraft>({ ...BLANK, campaignUuid: uuid });
   const [loading, setLoading] = useState(uuid !== null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [topics, setTopics] = useState<Array<{ key: string; label: string }>>([]);
@@ -84,7 +90,7 @@ export function useCampaignFlow(uuid: string | null = null): CampaignFlow {
         .then((res) => {
           if (!live) return;
           const c = unwrap(res).campaign;
-          setDraft({ ...BLANK, kind: c.kind, subject: c.subject ?? '', preheader: c.preheader ?? '', bodyHtml: c.body_html ?? '', topic: c.topic ?? '', target: c.target ?? BLANK.target });
+          setDraft({ ...BLANK, kind: c.kind, subject: c.subject ?? '', preheader: c.preheader ?? '', bodyHtml: c.body_html ?? '', topic: c.topic ?? '', target: c.target ?? BLANK.target, campaignUuid: c.uuid });
           setLoading(false);
         })
         .catch((e) => {
@@ -139,15 +145,30 @@ export function useCampaignFlow(uuid: string | null = null): CampaignFlow {
         kind: draft.kind, subject: draft.subject.trim(), preheader: draft.preheader.trim() || null, body_html: draft.bodyHtml,
         topic: draft.topic || null, target: draft.target,
       };
-      if (saved === null) {
+      const create = async () => {
         const created = unwrap(await request<Envelope<{ campaign: Campaign }>>('POST', 'campaigns', body)).campaign.uuid;
-        setSaved(created);
+        setDraft((d) => ({ ...d, campaignUuid: created }));
 
         return created;
-      }
-      await request('PUT', `campaigns/${saved}`, body);
+      };
+      const id = draft.campaignUuid;
+      if (id === null) return await create();
+      try {
+        await request('PUT', `campaigns/${id}`, body);
 
-      return saved;
+        return id;
+      } catch (e) {
+        const status = (e as { response?: { status?: number } })?.response?.status;
+        if (status === 404) return await create(); // deleted since: this draft becomes a new campaign
+        if (status === 422 && fieldError(e) !== null && !(e as { response?: { data?: { errors?: unknown } } }).response?.data?.errors) {
+          // Sent or scheduled since (the service keeps it as the record): let it go, and say so on the step.
+          setDraft((d) => ({ ...d, campaignUuid: null }));
+          setRefusal(`${fieldError(e)} This draft is no longer that campaign: check it, then continue to make a new one.`);
+
+          return null;
+        }
+        throw e;
+      }
     } catch (e) {
       const why = fieldError(e);
       if (why) setRefusal(why);
@@ -157,7 +178,7 @@ export function useCampaignFlow(uuid: string | null = null): CampaignFlow {
     } finally {
       setSaving(false);
     }
-  }, [request, onError, draft, saved]);
+  }, [request, onError, draft]);
 
   const loadChecks = useCallback(async () => {
     setChecks(null);
@@ -194,5 +215,5 @@ export function useCampaignFlow(uuid: string | null = null): CampaignFlow {
     }
   }, [request, onError, draft, save]);
 
-  return { draft, set, uuid: saved, loading, loadError, topics, reach, reachError, saving, save, checks, loadChecks, submitting, refusal, done, submit };
+  return { draft, set, uuid: draft.campaignUuid, loading, loadError, topics, reach, reachError, saving, save, checks, loadChecks, submitting, refusal, done, submit };
 }

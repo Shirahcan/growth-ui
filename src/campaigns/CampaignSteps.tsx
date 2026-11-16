@@ -48,12 +48,15 @@ export function campaignVerb(flow: CampaignFlow): string {
 function Reach({ flow }: { flow: CampaignFlow }) {
   if (flow.reachError) return <p className="gr-warning">Reach unknown: {flow.reachError}</p>;
   if (flow.reach === null) return <p className="gr-hint">Counting who it reaches…</p>;
-  const people = `${flow.reach.toLocaleString()} ${flow.reach === 1 ? 'person' : 'people'}`;
+  const count = flow.reach.toLocaleString();
 
+  // Said as a narrowing of the picker's own count above it, never a second "Reaches N" that could disagree with it:
+  // the picker counts who is in the audience, this counts who gets THIS one today.
   return (
     <p className="gr-row-title">
-      Reaches {people} today
-      <span className="gr-hint"> {flow.draft.kind === 'alert' ? '(only people who asked for every update)' : '(after each person’s pace and topics)'}</span>
+      {flow.draft.kind === 'alert'
+        ? `This alert goes to ${count} of them today: only people who asked for every update.`
+        : `This newsletter goes to ${count} of them today, after each person’s pace and topic choices.`}
     </p>
   );
 }
