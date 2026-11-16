@@ -79,10 +79,10 @@ describe('the story bank', () => {
   it('the guided add refuses an email address or phone number in the words', () => {
     const flow = (draft: Partial<typeof EMPTY_STORY>): StoryFlow => ({ draft: { ...EMPTY_STORY, ...draft }, patch: vi.fn(), hasConsent: false, saving: false, refusal: null, saved: null, save: vi.fn() });
     const [caseStep] = storySteps(flow({ case_type: 'Study permit', challenge: 'Reach her at ada@example.com' }));
-    expect(caseStep.validate()).toMatch(/email address or phone number/);
+    expect(caseStep?.validate()).toMatch(/email address or phone number/);
     const [, storyStep] = storySteps(flow({ case_type: 'x', challenge: 'y', strategy: 'Called +1 416 555 0199', outcome: 'Approved' }));
-    expect(storyStep.validate()).toMatch(/phone number/);
+    expect(storyStep?.validate()).toMatch(/phone number/);
     const [ok] = storySteps(flow({ case_type: 'Study permit', challenge: 'A gap year to explain.' }));
-    expect(ok.validate()).toBeNull();
+    expect(ok?.validate()).toBeNull();
   });
 });

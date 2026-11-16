@@ -138,10 +138,10 @@ export function CtaEditor({ draft, onChange, onClose, onSave, refused, saving }:
           {() => <ChoiceGroup label="Action" value={draft.action_kind} options={CTA_ACTIONS} onChange={(action_kind) => set({ action_kind })} />}
         </Field>
         {firstRef ? (
-          <Field label="Where it goes" hint={firstRef} error={refused}>
+          <Field label="Where it goes" hint={firstRef}>
             {(id) => <input id={id} className={INPUT} maxLength={2048} value={draft.action_ref} onChange={(e) => set({ action_ref: e.target.value })} />}
           </Field>
-        ) : refused ? <Notice>{refused}</Notice> : null}
+        ) : null}
 
         <label className="gr-check">
           <input type="checkbox" checked={draft.second} onChange={(e) => set({ second: e.target.checked })} />
@@ -170,6 +170,8 @@ export function CtaEditor({ draft, onChange, onClose, onSave, refused, saving }:
 
         <p className="gr-row-title">Preview</p>
         <CtaPreview d={draft} />
+        {/* A refusal can be about any field (the headline, a reference, the second button), so it is shown once, by Save. */}
+        {refused ? <Notice>{refused}</Notice> : null}
       </div>
     </Dialog>
   );
