@@ -6,6 +6,11 @@ import { Button, Card, Dialog, Empty, Kebab, LoadError, Loading, Pill, copyText 
 import { StoryEditor, editBody, editFrom, type StoryEdit } from './StoryEditor';
 import type { Story } from './types';
 
+/** The service records who checked as "name (ref)" for the audit; a person reads only the name. */
+export function personName(recorded: string): string {
+  return recorded.replace(/\s*\([^()]*\)\s*$/, '') || recorded;
+}
+
 /**
  * Growth > Blog > Client stories (post-and-newsletter-layouts B6): the product's story bank. A post's story part picks
  * from here, and only a story that is anonymised, has the client's consent on record, is ready, and was checked by a
@@ -124,7 +129,7 @@ export function StoryBank() {
                   <div className="gr-pills">
                     {state(s)}
                     {s.consent.method ? <Pill>Consent recorded</Pill> : <Pill tone="bad">No consent yet</Pill>}
-                    {s.verified_by ? <span className="gr-hint">Checked by {s.verified_by}</span> : null}
+                    {s.verified_by ? <span className="gr-hint">Checked by {personName(s.verified_by)}</span> : null}
                   </div>
                 </div>
                 <Kebab

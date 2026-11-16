@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { CtaLibrary, GrowthProvider, StoryBank, consentAt, ctaBodyFrom, ctaDraftFrom, localToday, storySteps, type CtaItem, type Story, type StoryFlow } from '../src';
 import { EMPTY_STORY } from '../src/blog/useStoryFlow';
 import { editBody, editFrom } from '../src/blog/StoryEditor';
+import { personName } from '../src/blog/StoryBank';
 
 const hrefFor = (tab: string) => `/admin/growth/${tab}`;
 
@@ -76,6 +77,11 @@ describe('the story bank', () => {
     fireEvent.click(screen.getByText('Mark as checked'));
     await waitFor(() => expect(request).toHaveBeenCalledWith('POST', 'stories/3/verify', {}));
     expect(screen.getByRole('link', { name: 'Add a story' }).getAttribute('href')).toBe('/admin/growth/blog/stories/new');
+  });
+
+  it('says who checked a story by name, never by internal reference', () => {
+    expect(personName('ada@example.com (user:dc30e1ea-34e4)')).toBe('ada@example.com');
+    expect(personName('user:42')).toBe('user:42');
   });
 
   it('an edit sends only what changed, so an untouched consent is never re-dated', () => {
