@@ -58,3 +58,15 @@ export { parseCsv, CsvError } from './audience/csv';
 export type { Pick, Target } from './audience/TargetPicker';
 export type { AudienceSettings, Lapsing, PeoplePage, Person, PersonSheet as PersonSheetData, SubscriberStatus, TrailEntry } from './audience/types';
 export { momentLabel } from './plan/dates';
+
+// The CTA library and the story bank (post-and-newsletter-layouts B2, B6).
+export { CtaLibrary } from './blog/CtaLibrary';
+export { CtaEditor, CtaPreview, bodyFrom as ctaBodyFrom, draftFrom as ctaDraftFrom } from './blog/CtaEditor';
+export type { CtaDraft } from './blog/CtaEditor';
+export { StoryBank } from './blog/StoryBank';
+export { storySteps } from './blog/StorySteps';
+export type { StoryStep, StoryStepsOptions } from './blog/StorySteps';
+export { useStoryFlow, EMPTY_STORY, consentAt, localToday } from './blog/useStoryFlow';
+export type { StoryDraft, StoryFlow } from './blog/useStoryFlow';
+export { CTA_ACTIONS, CTA_STAGES, CTA_VARIANTS, CONSENT_METHODS } from './blog/types';
+export type { CtaActionKind, CtaItem, CtaStage, CtaVariant, ConsentMethod, Story, StoryStatus } from './blog/types';
