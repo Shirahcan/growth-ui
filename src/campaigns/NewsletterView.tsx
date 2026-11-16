@@ -1,0 +1,203 @@
+import { useEffect, useState, type ReactNode } from 'react';
+import { useGrowth } from '../GrowthProvider';
+import { momentLabel } from '../plan/dates';
+import { unwrap, type Envelope } from '../plan/types';
+import { fieldError } from '../settings/SourceDialog';
+import { Button, Card, ChoiceGroup, Dialog, Empty, Field, INPUT, Kebab, LoadError, Loading, Pill, copyText } from '../ui/primitives';
+
+/**
+ * Growth > Newsletter on the shared service (G5d3): every newsletter and alert, its state, and what it did (sent,
+ * opened, clicked). `newCampaign` is the host's way into its wizard; `onEdit` opens a draft there.
+ */
+export interface Campaign {
+  uuid: string;
+  kind: 'regular' | 'alert';
+  subject: string;
+  preheader: string | null;
+  status: 'draft' | 'scheduled' | 'sending' | 'sent' | 'failed';
+  held_reason: string | null;
+  topic: string | null;
+  scheduled_at: string | null;
+  sent_at: string | null;
+  recipients_total: number;
+  sent_count: number;
+  failed_count: number;
+  open_count: number;
+  click_count: number;
+  created_at: string | null;
+}
+
+type Filter = 'all' | 'regular' | 'alert';
+
+const STATE: Record<Campaign['status'], { words: string; tone: 'muted' | 'accent' | 'good' | 'bad' }> = {
+  draft: { words: 'Draft', tone: 'muted' },
+  scheduled: { words: 'Scheduled', tone: 'accent' },
+  sending: { words: 'Sending', tone: 'accent' },
+  sent: { words: 'Sent', tone: 'good' },
+  failed: { words: 'Failed', tone: 'bad' },
+};
+
+const people = (n: number) => `${n.toLocaleString()} ${n === 1 ? 'person' : 'people'}`;
+
+/** What it did, or when it goes, in plain words. */
+export function campaignProgress(c: Campaign): string {
+  if (c.status === 'draft') return 'Not sent yet';
+  if (c.status === 'scheduled') return c.scheduled_at ? `Goes out ${momentLabel(c.scheduled_at)}` : 'Scheduled';
+  const sent = c.status === 'sending' ? `Sent to ${people(c.sent_count)} of ${c.recipients_total.toLocaleString()} so far` : `Sent to ${people(c.sent_count)}`;
+  const failed = c.failed_count > 0 ? `, ${c.failed_count.toLocaleString()} could not be delivered` : '';
+
+  return `${sent}${failed}. Opened by ${c.open_count.toLocaleString()}, clicked by ${c.click_count.toLocaleString()}`;
+}
+
+export function NewsletterView({ newCampaign, onEdit }: { newCampaign?: ReactNode; onEdit?: (uuid: string) => void }) {
+  const { request, notify, onError, canEdit } = useGrowth();
+  const [items, setItems] = useState<Campaign[] | null>(null);
+  const [failed, setFailed] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
+  const [filter, setFilter] = useState<Filter>('all');
+  const [deleting, setDeleting] = useState<Campaign | null>(null);
+  const [testing, setTesting] = useState<Campaign | null>(null);
+  const [testTo, setTestTo] = useState('');
+  const [testError, setTestError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    let live = true;
+    request<Envelope<{ campaigns: Campaign[] }>>('GET', 'campaigns')
+      .then((res) => {
+        if (!live) return;
+        setItems(unwrap(res).campaigns);
+        setFailed(null);
+      })
+      .catch((e) => {
+        if (!live) return;
+        setFailed(e instanceof Error ? e.message : 'The newsletters could not be loaded.');
+        onError(e);
+      });
+
+    return () => {
+      live = false;
+    };
+  }, [request, onError, reloadKey]);
+
+  async function act(method: 'POST' | 'DELETE', path: string, message: string, after?: () => void) {
+    setBusy(true);
+    try {
+      await request(method, path, {});
+      notify(message);
+      after?.();
+      setReloadKey((k) => k + 1);
+    } catch (e) {
+      onError(e);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function sendTest(c: Campaign) {
+    setBusy(true);
+    setTestError(null);
+    try {
+      await request('POST', `campaigns/${c.uuid}/test`, { email: testTo.trim() });
+      notify(`Test sent to ${testTo.trim()}.`);
+      setTesting(null);
+    } catch (e) {
+      const why = fieldError(e);
+      if (why) setTestError(why);
+      else onError(e);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function copy(text: string) {
+    if (await copyText(text)) notify('Reference copied.');
+    else onError(new Error('Copying was blocked by the browser. Select the reference and copy it instead.'));
+  }
+
+  const shown = (items ?? []).filter((c) => filter === 'all' || c.kind === filter);
+
+  return (
+    <Card>
+      <div className="gr-stack">
+        <div className="gr-row-between">
+          <div>
+            <h2 className="gr-section-title">Newsletters</h2>
+            <p className="gr-hint">Emails to people who said yes, at the pace they chose. Alerts reach only people who asked for every update.</p>
+          </div>
+          {canEdit ? newCampaign ?? null : null}
+        </div>
+
+        <ChoiceGroup<Filter> label="Show" value={filter} onChange={setFilter} options={[{ value: 'all', label: 'All' }, { value: 'regular', label: 'Newsletters' }, { value: 'alert', label: 'Alerts' }]} />
+
+        {failed ? (
+          <LoadError message={failed} onRetry={() => setReloadKey((k) => k + 1)} />
+        ) : items === null ? (
+          <Loading />
+        ) : shown.length === 0 ? (
+          <Empty>{items.length === 0 ? 'No newsletters yet. Write the first one; it goes only to people who said yes.' : 'Nothing of this kind yet.'}</Empty>
+        ) : (
+          <ul className="gr-list">
+            {shown.map((c) => (
+              <li key={c.uuid} className="gr-list-row">
+                <div className="gr-grow">
+                  <p className="gr-row-title">{c.subject}</p>
+                  <div className="gr-pills">
+                    <Pill tone={c.held_reason ? 'bad' : STATE[c.status].tone}>{c.held_reason ? 'Held' : STATE[c.status].words}</Pill>
+                    {c.kind === 'alert' ? <Pill tone="accent">Alert</Pill> : null}
+                    <span className="gr-hint">{campaignProgress(c)}</span>
+                  </div>
+                  {c.held_reason ? <p className="gr-hint">Held: {c.held_reason}</p> : null}
+                </div>
+                <Kebab
+                  label={`Actions for ${c.subject}`}
+                  items={[
+                    { label: 'Continue editing', hidden: !canEdit || !onEdit || c.status !== 'draft', onSelect: () => onEdit?.(c.uuid) },
+                    { label: 'Send a test', hidden: !canEdit, onSelect: () => { setTesting(c); setTestTo(''); setTestError(null); } },
+                    { label: 'Cancel schedule', hidden: !canEdit || c.status !== 'scheduled', onSelect: () => void act('POST', `campaigns/${c.uuid}/cancel`, 'Schedule cancelled. It is a draft again.') },
+                    { label: 'Copy reference', onSelect: () => copy(c.uuid) },
+                    { label: 'Delete draft', danger: true, hidden: !canEdit || c.status !== 'draft', onSelect: () => setDeleting(c) },
+                  ]}
+                />
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      {deleting ? (
+        <Dialog
+          title={`Delete "${deleting.subject}"?`}
+          description="Nobody has received this draft. Deleting it cannot be undone."
+          onClose={() => setDeleting(null)}
+          footer={
+            <>
+              <Button onClick={() => setDeleting(null)}>Keep it</Button>
+              <Button tone="danger" disabled={busy} onClick={() => void act('DELETE', `campaigns/${deleting.uuid}`, 'Draft deleted.', () => setDeleting(null))}>Delete draft</Button>
+            </>
+          }
+        >
+          <p className="gr-hint">{deleting.kind === 'alert' ? 'An alert' : 'A newsletter'} written {deleting.created_at ? momentLabel(deleting.created_at) : 'earlier'}.</p>
+        </Dialog>
+      ) : null}
+
+      {testing ? (
+        <Dialog
+          title="Send a test"
+          description="One copy, exactly as people will see it, marked as a test. It is not counted and nobody else receives it."
+          onClose={() => setTesting(null)}
+          footer={
+            <>
+              <Button onClick={() => setTesting(null)}>Cancel</Button>
+              <Button tone="primary" disabled={busy || testTo.trim() === ''} onClick={() => void sendTest(testing)}>Send the test</Button>
+            </>
+          }
+        >
+          <Field label="Send it to" error={testError}>
+            {(id) => <input id={id} type="email" className={INPUT} value={testTo} onChange={(e) => setTestTo(e.target.value)} placeholder="you@example.com" />}
+          </Field>
+        </Dialog>
+      ) : null}
+    </Card>
+  );
+}
