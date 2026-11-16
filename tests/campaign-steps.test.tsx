@@ -203,4 +203,35 @@ describe('campaignSteps', () => {
     expect(await screen.findByText('Growth is not connected to the AI writer for this product yet.')).toBeTruthy();
     expect((screen.getByLabelText('The email body') as HTMLTextAreaElement).value).toBe('<p>My own words.</p>');
   });
+
+  it('a saved draft follows every edit on the service a moment later, and an unsaved one never autosaves', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    let flow: ReturnType<typeof useCampaignFlow> | null = null;
+    function Probe() {
+      flow = useCampaignFlow(null);
+      return null;
+    }
+    const calls: Call[] = [];
+    const request = vi.fn(async (method: string, path: string, body?: unknown) => {
+      calls.push([method, path, body]);
+      return method === 'POST' && path === 'campaigns' ? { data: { campaign: { uuid: 'c-1' } } } : { data: {} };
+    });
+    render(
+      <GrowthProvider product="portify" request={request as never} hrefFor={hrefFor as never} onError={vi.fn()} onNotice={vi.fn()} words={{ audiences: {}, product: 'Portify' }}>
+        <Probe />
+      </GrowthProvider>,
+    );
+    const writes = () => calls.filter((c) => c[0] === 'PUT' || (c[0] === 'POST' && c[1] === 'campaigns'));
+
+    act(() => flow!.set({ subject: 'Unsaved', bodyHtml: '<p>Words not yet kept anywhere on the service.</p>' }));
+    await act(async () => { vi.advanceTimersByTime(1500); });
+    expect(writes()).toHaveLength(0); // nothing saved until the checks step or the send
+
+    act(() => flow!.set({ campaignUuid: 'c-1' }));
+    act(() => flow!.set({ subject: 'Now kept' }));
+    await act(async () => { vi.advanceTimersByTime(1500); });
+    expect(writes()).toHaveLength(1);
+    expect(writes()[0]).toMatchObject(['PUT', 'campaigns/c-1', { subject: 'Now kept' }]);
+    vi.useRealTimers();
+  });
 });

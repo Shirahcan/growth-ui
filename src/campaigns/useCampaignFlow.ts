@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useGrowth } from '../GrowthProvider';
 import type { Target } from '../audience/TargetPicker';
 import { unwrap, type Envelope } from '../plan/types';
@@ -16,6 +16,10 @@ import type { Campaign } from './NewsletterView';
  * the draft in progress ("Continue later") then restores the id with it, so coming back resumes THAT campaign instead
  * of creating a second one at the checks step. A restored id whose campaign was deleted is replaced by a new one; one
  * that has since been sent or scheduled is let go, and the admin is told on the step.
+ *
+ * ⚠ ONCE SAVED, THE SERVICE IS THE ONLY DRAFT (0.14.1): every edit is saved to it a moment later, so a host never needs
+ * its own copy of a saved campaign. A host shell that also kept one restored a draft the admin had since DELETED from
+ * the list, and the checks step saved it again as a new campaign (found in Portify's Loop 1).
  */
 export interface CampaignDraft {
   kind: 'regular' | 'alert';
@@ -78,6 +82,8 @@ export function useCampaignFlow(uuid: string | null = null): CampaignFlow {
   const [submitting, setSubmitting] = useState(false);
   const [refusal, setRefusal] = useState<string | null>(null);
   const [done, setDone] = useState<Campaign | null>(null);
+  // Edits the admin made (not loads, not the id a save brings back): what the autosave follows.
+  const [edits, setEdits] = useState(0);
 
   // A draft read back as it was left, and the topics people can choose (the product's own words).
   useEffect(() => {
@@ -128,6 +134,7 @@ export function useCampaignFlow(uuid: string | null = null): CampaignFlow {
 
   const set = useCallback((patch: Partial<CampaignDraft>) => {
     setRefusal(null);
+    setEdits((n) => n + 1);
     if ('kind' in patch || 'topic' in patch || 'target' in patch) setReach(null);
     if ('kind' in patch || 'topic' in patch || 'target' in patch || 'subject' in patch || 'bodyHtml' in patch) setChecks(null);
     setDraft((d) => ({ ...d, ...patch }));
@@ -190,6 +197,19 @@ export function useCampaignFlow(uuid: string | null = null): CampaignFlow {
       onError(e);
     }
   }, [request, onError, save]);
+
+  // Saved drafts follow every edit a moment later (only once there is something to keep).
+  const saveRef = useRef(save);
+  useEffect(() => {
+    saveRef.current = save;
+  }, [save]);
+  const hasWords = draft.subject.trim() !== '' && draft.bodyHtml.replace(/<[^>]+>/g, '').trim() !== '';
+  useEffect(() => {
+    if (edits === 0 || draft.campaignUuid === null || submitting || !hasWords) return undefined;
+    const t = setTimeout(() => void saveRef.current(), 1000);
+
+    return () => clearTimeout(t);
+  }, [edits, draft.campaignUuid, submitting, hasWords]);
 
   const submit = useCallback(async (): Promise<Campaign | null> => {
     setSubmitting(true);
