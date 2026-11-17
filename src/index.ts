@@ -66,10 +66,12 @@ export { CtaEditor, CtaPreview, bodyFrom as ctaBodyFrom, draftFrom as ctaDraftFr
 export type { CtaDraft } from './blog/CtaEditor';
 export { StoryBank } from './blog/StoryBank';
 export { BlogCategories, categoryBodyFrom, categoryDraftFrom, slugFrom } from './blog/BlogCategories';
+export { BlogPosts, postStatus, postsPath } from './blog/BlogPosts';
+export type { BlogPostsProps } from './blog/BlogPosts';
 export type { CategoryDraft } from './blog/BlogCategories';
 export { storySteps } from './blog/StorySteps';
 export type { StoryStep, StoryStepsOptions } from './blog/StorySteps';
 export { useStoryFlow, EMPTY_STORY, consentAt, localToday } from './blog/useStoryFlow';
 export type { StoryDraft, StoryFlow } from './blog/useStoryFlow';
 export { CTA_ACTIONS, CTA_STAGES, CTA_VARIANTS, CONSENT_METHODS } from './blog/types';
-export type { BlogCategory, CtaActionKind, CtaItem, CtaStage, CtaVariant, ConsentMethod, Story, StoryStatus } from './blog/types';
+export type { BlogCategory, BlogPostReach, BlogPostStatus, BlogPostSummary, CtaActionKind, CtaItem, CtaStage, CtaVariant, ConsentMethod, Story, StoryStatus } from './blog/types';
