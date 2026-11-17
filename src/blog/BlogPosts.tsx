@@ -45,6 +45,11 @@ export interface BlogPostsProps {
   navigate: (href: string) => void;
   /** Each post's readers and subscribers as the PRODUCT measures them, by post uuid. Absent: the columns are not shown. */
   reach?: Record<string, BlogPostReach>;
+  /**
+   * The same figures, asked for exactly the rows on screen (by uuid and address) each time the list loads. For a host
+   * that measures by address and cannot know the list in advance. Ignored when `reach` is given.
+   */
+  reachFor?: (posts: readonly { uuid: string; slug: string | null }[]) => Promise<Record<string, BlogPostReach>>;
 }
 
 /**
@@ -53,7 +58,7 @@ export interface BlogPostsProps {
  * product's own figures, passed in by the host, because the service does not measure them. A post's address comes from
  * the service (`public_url`), never assembled here, so a product whose blog address is not set yet shows no link at all.
  */
-export function BlogPosts({ postHref, designHref, navigate, reach }: BlogPostsProps) {
+export function BlogPosts({ postHref, designHref, navigate, reach: given, reachFor }: BlogPostsProps) {
   const { request, notify, onError, canEdit, Link } = useGrowth();
   const [status, setStatus] = useState<StatusFilter>('all');
   const [category, setCategory] = useState<number | ''>('');
@@ -64,6 +69,8 @@ export function BlogPosts({ postHref, designHref, navigate, reach }: BlogPostsPr
   const [reloadKey, setReloadKey] = useState(0);
   const [deleting, setDeleting] = useState<BlogPostSummary | null>(null);
   const [managing, setManaging] = useState(false);
+  const [asked, setAsked] = useState<Record<string, BlogPostReach> | undefined>(undefined);
+  const reach = given ?? asked;
 
   // The list follows its filters; typing waits a moment so every key is not a request.
   useEffect(() => {
@@ -72,8 +79,15 @@ export function BlogPosts({ postHref, designHref, navigate, reach }: BlogPostsPr
       request<Envelope<{ posts: BlogPostSummary[] }>>('GET', postsPath(status, category, q))
         .then((res) => {
           if (!live) return;
-          setPosts(unwrap(res).posts);
+          const rows = unwrap(res).posts;
+          setPosts(rows);
           setFailed(null);
+          // The product's figures for these rows; a failure leaves the columns out rather than showing zeros as fact.
+          if (!given && reachFor) {
+            reachFor(rows.map((p) => ({ uuid: p.uuid, slug: p.slug })))
+              .then((figures) => live && setAsked(figures))
+              .catch((e) => live && onError(e));
+          }
         })
         .catch((e) => {
           if (!live) return;
@@ -86,7 +100,7 @@ export function BlogPosts({ postHref, designHref, navigate, reach }: BlogPostsPr
       live = false;
       clearTimeout(timer);
     };
-  }, [request, onError, status, category, q, reloadKey]);
+  }, [request, onError, status, category, q, reloadKey, given, reachFor]);
 
   // Every category, switched-off ones too: an older post can still sit in one.
   useEffect(() => {

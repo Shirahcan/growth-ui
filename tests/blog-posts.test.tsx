@@ -48,6 +48,15 @@ describe('the blog posts list', () => {
     expect(list.getAllByText('Express Entry')).toHaveLength(2);
   });
 
+  it('asks the host for the figures of exactly the rows it loaded, by uuid and address', async () => {
+    const reachFor = vi.fn(async () => ({ 'u-live': { readers: 7, subscribers: 2 } }));
+    mount(server([live, designed]), { reachFor });
+
+    const list = within(await screen.findByRole('list', { name: 'Posts' }));
+    expect(await list.findByText('7 readers, 2 subscribers')).toBeTruthy();
+    expect(reachFor).toHaveBeenCalledWith([{ uuid: 'u-live', slug: 'crs-explained' }, { uuid: 'u-design', slug: designed.slug }]);
+  });
+
   it('without reach figures from the host, no readers or subscribers are shown at all', async () => {
     mount(server([live]));
     expect(await screen.findByText('CRS explained')).toBeTruthy();
