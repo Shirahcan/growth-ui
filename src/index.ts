@@ -87,6 +87,8 @@ export type { BlogCategory, BlogCtaKind, BlogPageWidth, BlogPostDetail, BlogPost
 
 // The public blog's reading features (S8b-1): client components, so they live in the root ('use client') bundle.
 // The reader-facing list and post are in `./public` (server-safe).
+export { PostHelpers } from './blog/PostHelpers';
+export type { PostHelpersProps, ProofreadIssue } from './blog/PostHelpers';
 export { KeepReading, DEFAULT_KEEP_READING_WORDS } from './blog/reading/KeepReading';
 export type { KeepReadingProps, KeepReadingWords } from './blog/reading/KeepReading';
 export { RememberReading, DEFAULT_REMEMBER_READING_WORDS } from './blog/reading/RememberReading';
