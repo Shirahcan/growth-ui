@@ -1,0 +1,243 @@
+/*
+ * @shirahcan/growth-ui/public.css: the public blog (S8b-1, ./public). Its own file so a reader-facing page never
+ * loads the admin screens' CSS. Server-rendered, no provider: every value falls back to the estate's look, and a
+ * product sets the --gr-* variables (the components' theme prop) to restyle it. Margins and list styles are set
+ * here, never assumed from a host's CSS reset. --gr-ink-soft is optional: body text a step lighter than the ink.
+ */
+.gr-blog { color: var(--gr-ink, #0f172a); font-family: var(--gr-font, inherit); }
+.gr-blog h1, .gr-blog h2, .gr-blog p, .gr-blog ul, .gr-blog dl, .gr-blog dd { margin: 0; }
+.gr-blog ul { padding: 0; list-style: none; }
+.gr-blog-article { background: var(--gr-dialog-surface, #fff); }
+
+.gr-blog-categories { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 2rem; }
+.gr-blog-pill {
+  display: inline-block;
+  white-space: nowrap;
+  border: 1px solid var(--gr-border, #e2e8f0);
+  border-radius: var(--gr-radius-pill, 9999px);
+  padding: 0.375rem 1rem;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  font-weight: 600;
+  color: var(--gr-ink-soft, #475569);
+  text-decoration: none;
+  outline: none;
+  transition: color 150ms, background-color 150ms;
+}
+.gr-blog-pill:hover { color: var(--gr-accent, #4361ee); }
+.gr-blog-pill:focus-visible { box-shadow: 0 0 0 2px var(--gr-accent, #4361ee); }
+.gr-blog-pill-on, .gr-blog-pill-on:hover { border-color: transparent; background: var(--gr-accent, #4361ee); color: var(--gr-accent-ink, #fff); }
+
+.gr-blog-grid { display: grid; gap: 1.5rem; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 640px) { .gr-blog-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1024px) { .gr-blog-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (min-width: 1536px) { .gr-blog-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.gr-blog-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--gr-border, #e2e8f0);
+  border-radius: 1.5rem;
+  background: var(--gr-dialog-surface, #fff);
+  padding: 1.5rem;
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  transition: box-shadow 150ms;
+}
+.gr-blog-card:hover { box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); }
+.gr-blog-read {
+  position: absolute;
+  top: 1.25rem;
+  right: 1.25rem;
+  display: none;
+  border-radius: var(--gr-radius-pill, 9999px);
+  background: var(--gr-surface-muted, #f1f5f9);
+  padding: 0.125rem 0.625rem;
+  font-size: 0.75rem;
+  line-height: 1rem;
+  font-weight: 600;
+  color: var(--gr-ink-soft, #475569);
+}
+.gr-blog-card[data-read="true"] .gr-blog-read { display: inline-flex; }
+.gr-blog-card-category, .gr-blog-article-category {
+  font-size: 0.75rem;
+  line-height: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--gr-accent, #4361ee);
+}
+.gr-blog .gr-blog-card-category { padding-right: 3rem; }
+.gr-blog .gr-blog-card-title { margin-top: 0.5rem; font-size: 1.25rem; line-height: 1.75rem; font-weight: 700; color: var(--gr-ink, #0f172a); }
+.gr-blog-card-title a { color: inherit; text-decoration: none; outline: none; }
+.gr-blog-card-title a:hover { color: var(--gr-accent, #4361ee); }
+.gr-blog .gr-blog-card-answer {
+  margin-top: 0.5rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  color: var(--gr-ink-soft, #475569);
+}
+.gr-blog .gr-blog-card-meta { margin-top: auto; padding-top: 1rem; font-size: 0.75rem; line-height: 1rem; color: var(--gr-ink-muted, #64748b); }
+
+.gr-blog-pager { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-top: 2.5rem; }
+.gr-blog-pager .gr-blog-pill { color: var(--gr-ink-soft, #334155); }
+.gr-blog-pager .gr-blog-pill:hover { color: var(--gr-accent, #4361ee); }
+.gr-blog .gr-blog-pager-count { font-size: 0.875rem; line-height: 1.25rem; color: var(--gr-ink-muted, #64748b); }
+
+/* The article. A host with its own page frame passes a Column; this is the frame for one without. */
+.gr-blog-column { box-sizing: border-box; width: 100%; max-width: 48rem; margin: 0 auto; padding: 3rem 1rem; }
+.gr-blog-column-header { padding-bottom: 2.5rem; }
+.gr-blog-column-footer { padding-top: 0; }
+.gr-blog-breadcrumb { font-size: 0.875rem; line-height: 1.25rem; color: var(--gr-ink-muted, #64748b); }
+.gr-blog-breadcrumb a { color: inherit; text-decoration: none; outline: none; }
+.gr-blog-breadcrumb a:hover { color: var(--gr-ink, #1e293b); }
+.gr-blog-crumb-sep { margin: 0 0.5rem; }
+.gr-blog .gr-blog-article-category { margin-top: 1.5rem; }
+.gr-blog-article-category a { color: inherit; text-decoration: none; outline: none; }
+.gr-blog-article-category a:hover { text-decoration: underline; }
+.gr-blog .gr-blog-title { margin-top: 0.5rem; font-size: 1.875rem; line-height: 2.25rem; font-weight: 700; letter-spacing: -0.025em; color: var(--gr-ink, #0f172a); }
+@media (min-width: 640px) { .gr-blog .gr-blog-title { font-size: 2.25rem; line-height: 2.5rem; } }
+.gr-blog .gr-blog-byline { margin-top: 1rem; font-size: 0.75rem; line-height: 1rem; color: var(--gr-ink-muted, #64748b); }
+.gr-blog .gr-blog-answer { margin-top: 2rem; font-size: 1.125rem; line-height: 1.625; color: var(--gr-ink, #1e293b); }
+
+.gr-blog-sources { margin-top: 2.5rem; }
+.gr-blog .gr-blog-h-small { font-size: 1.125rem; line-height: 1.75rem; font-weight: 700; color: var(--gr-ink, #0f172a); }
+.gr-blog .gr-blog-sources ul { margin-top: 0.5rem; font-size: 0.875rem; line-height: 1.25rem; }
+.gr-blog-sources li + li { margin-top: 0.25rem; }
+.gr-blog-sources a { color: var(--gr-accent, #4361ee); text-decoration: none; text-underline-offset: 2px; outline: none; }
+.gr-blog-sources a:hover { text-decoration: underline; }
+.gr-blog-questions { margin-top: 3rem; }
+.gr-blog .gr-blog-h { font-size: 1.5rem; line-height: 2rem; font-weight: 700; color: var(--gr-ink, #0f172a); }
+.gr-blog .gr-blog-questions dl { margin-top: 1rem; }
+.gr-blog-questions dl > div + div { margin-top: 1.25rem; }
+.gr-blog-questions dt { font-weight: 600; color: var(--gr-ink, #0f172a); }
+.gr-blog .gr-blog-questions dd { margin-top: 0.25rem; color: var(--gr-ink-soft, #334155); }
+.gr-blog .gr-blog-disclaimer { margin-top: 2.5rem; font-size: 0.75rem; line-height: 1rem; color: var(--gr-ink-muted, #64748b); }
+.gr-blog-signup {
+  box-sizing: border-box;
+  max-width: 48rem;
+  margin: 2rem auto 0;
+  border: 1px solid var(--gr-border, #e2e8f0);
+  border-radius: 1.5rem;
+  background: var(--gr-surface-muted, #f8fafc);
+  padding: 1.5rem;
+}
+.gr-blog-signup-label { font-weight: 600; color: var(--gr-ink, #0f172a); }
+.gr-blog-signup > div { margin-top: 0.75rem; }
+.gr-blog-cta { margin-top: 2rem; }
+.gr-blog-cta-button {
+  display: inline-block;
+  white-space: nowrap;
+  border-radius: var(--gr-radius-pill, 9999px);
+  background: var(--gr-accent, #4361ee);
+  padding: 0.75rem 1.5rem;
+  font-weight: 600;
+  color: var(--gr-accent-ink, #fff);
+  text-decoration: none;
+  outline: none;
+}
+.gr-blog-cta-button:hover { filter: brightness(0.93); }
+.gr-blog-cta-button:focus-visible { box-shadow: 0 0 0 2px var(--gr-accent, #4361ee); }
+
+/* A written body, as saved. The reading type of a long guide: 18px, generous lines, quiet lists and rules. */
+.gr-blog .gr-prose { margin-top: 2rem; font-size: 1.125rem; line-height: 1.7777778; color: var(--gr-ink-soft, #334155); }
+.gr-prose > :first-child { margin-top: 0; }
+.gr-prose > :last-child { margin-bottom: 0; }
+.gr-blog .gr-prose p { margin: 1.3333333em 0; }
+.gr-blog .gr-prose h2 { margin: 1.8666667em 0 1.0666667em; font-size: 1.6666667em; line-height: 1.3333333; font-weight: 700; color: var(--gr-ink, #0f172a); }
+.gr-prose h3 { margin: 1.6666667em 0 0.6666667em; font-size: 1.3333333em; line-height: 1.5; font-weight: 600; color: var(--gr-ink, #0f172a); }
+.gr-prose h4 { margin: 1.7777778em 0 0.4444444em; font-weight: 600; color: var(--gr-ink, #0f172a); }
+.gr-prose a { color: var(--gr-ink, #0f172a); font-weight: 500; text-decoration: underline; }
+.gr-prose strong, .gr-prose b { font-weight: 600; color: var(--gr-ink, #0f172a); }
+.gr-blog .gr-prose ul { margin: 1.3333333em 0; padding-left: 1.5555556em; list-style: disc; }
+.gr-prose ol { margin: 1.3333333em 0; padding-left: 1.5555556em; list-style: decimal; }
+.gr-prose li { margin: 0.6666667em 0; padding-left: 0.4444444em; }
+.gr-prose ul > li::marker { color: #cbd5e1; }
+.gr-prose ol > li::marker { color: var(--gr-ink-muted, #64748b); }
+.gr-prose blockquote { margin: 1.6666667em 0; border-left: 0.25rem solid var(--gr-border, #e2e8f0); padding-left: 1em; font-style: italic; font-weight: 500; color: var(--gr-ink, #0f172a); }
+.gr-prose hr { margin: 3.1111111em 0; border: 0; border-top: 1px solid var(--gr-border, #e2e8f0); }
+.gr-prose img { max-width: 100%; height: auto; margin: 1.7777778em 0; }
+.gr-prose code { font-size: 0.8888889em; font-weight: 600; color: var(--gr-ink, #0f172a); }
+.gr-prose table { width: 100%; margin: 2em 0; border-collapse: collapse; font-size: 0.8888889em; line-height: 1.5; }
+.gr-prose th { border-bottom: 1px solid #cbd5e1; padding: 0 0.75em 0.75em; text-align: left; font-weight: 600; color: var(--gr-ink, #0f172a); }
+.gr-prose td { border-bottom: 1px solid var(--gr-border, #e2e8f0); padding: 0.75em; vertical-align: top; }
+
+/* Keep reading (client, root export): three related posts, the whole card is the link. */
+.gr-keep { margin-top: 3rem; }
+.gr-blog .gr-keep-all { margin-top: 0.5rem; font-size: 0.875rem; line-height: 1.25rem; color: var(--gr-ink-muted, #64748b); }
+.gr-keep-all-link { font-weight: 600; color: var(--gr-accent, #4361ee); text-decoration: none; outline: none; }
+.gr-keep-all-link:hover { text-decoration: underline; }
+.gr-blog .gr-keep-grid { display: grid; gap: 1rem; margin-top: 1rem; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 640px) { .gr-blog .gr-keep-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.gr-keep-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--gr-border, #e2e8f0);
+  border-radius: 1rem;
+  background: var(--gr-dialog-surface, #fff);
+  padding: 1rem;
+  transition: box-shadow 150ms;
+}
+.gr-keep-card:hover { box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); }
+.gr-keep-card:focus-within { box-shadow: 0 0 0 2px var(--gr-accent, #4361ee); }
+.gr-keep-read {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  border-radius: var(--gr-radius-pill, 9999px);
+  background: var(--gr-surface-muted, #f1f5f9);
+  padding: 0.125rem 0.5rem;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--gr-ink-soft, #475569);
+}
+.gr-blog .gr-keep-category { padding-right: 3rem; font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--gr-accent, #4361ee); }
+.gr-keep-title { display: block; margin-top: 0.25rem; font-weight: 600; line-height: 1.375; color: var(--gr-ink, #0f172a); text-decoration: none; outline: none; }
+.gr-keep-title::after { content: ''; position: absolute; inset: 0; border-radius: 1rem; }
+.gr-keep-card:hover .gr-keep-title { color: var(--gr-accent, #4361ee); }
+.gr-blog .gr-keep-answer {
+  margin-top: 0.5rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: 0.875rem;
+  line-height: 1.625;
+  color: var(--gr-ink-soft, #475569);
+}
+.gr-keep-cue { display: inline-flex; align-items: center; gap: 0.25rem; margin-top: auto; padding-top: 0.75rem; font-size: 0.875rem; font-weight: 600; color: var(--gr-accent, #4361ee); }
+.gr-keep-cue svg { transition: transform 150ms; }
+.gr-keep-card:hover .gr-keep-cue svg { transform: translateX(2px); }
+
+/* Remember what I read (client, root export): signed-in readers only, off until they say yes. */
+.gr-remember { margin-top: 2rem; border: 1px solid var(--gr-border, #e2e8f0); border-radius: 1rem; background: var(--gr-dialog-surface, #fff); padding: 1rem; font-size: 0.875rem; line-height: 1.25rem; }
+.gr-remember-off { background: var(--gr-surface-muted, #f8fafc); }
+.gr-blog .gr-remember-title { font-weight: 600; color: var(--gr-ink, #0f172a); }
+.gr-remember-picked { display: flex; align-items: center; gap: 0.5rem; }
+.gr-remember-picked svg { color: var(--gr-accent, #4361ee); }
+.gr-blog .gr-remember-body { margin-top: 0.25rem; color: var(--gr-ink-soft, #475569); }
+.gr-remember-on {
+  margin-top: 0.75rem;
+  white-space: nowrap;
+  border: 0;
+  border-radius: var(--gr-radius-pill, 9999px);
+  background: var(--gr-accent, #4361ee);
+  padding: 0.5rem 1rem;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--gr-accent-ink, #fff);
+  cursor: pointer;
+  outline: none;
+}
+.gr-remember-on:hover:not(:disabled) { filter: brightness(0.93); }
+.gr-remember-on:disabled { opacity: 0.6; cursor: not-allowed; }
+.gr-blog .gr-remember-picks { margin-top: 0.5rem; }
+.gr-remember-picks li + li { margin-top: 0.375rem; }
+.gr-remember-pick { font-weight: 500; color: var(--gr-accent, #4361ee); text-decoration: none; outline: none; }
+.gr-remember-pick:hover { text-decoration: underline; }
+.gr-blog .gr-remember-status { margin-top: 0.75rem; font-size: 0.75rem; line-height: 1rem; color: var(--gr-ink-muted, #64748b); }
+.gr-remember-off-button { border: 0; background: none; padding: 0; font: inherit; font-weight: 600; color: var(--gr-ink-soft, #334155); text-decoration: underline; cursor: pointer; outline: none; }
+.gr-remember-off-button:disabled { opacity: 0.6; cursor: not-allowed; }

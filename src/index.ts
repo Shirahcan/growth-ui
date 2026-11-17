@@ -84,3 +84,12 @@ export { useCreatePostFlow } from './blog/useCreatePostFlow';
 export type { CreatePostDraft, CreatePostFlow, CreatePostFlowOptions, PostTemplate } from './blog/useCreatePostFlow';
 export { CTA_ACTIONS, CTA_STAGES, CTA_VARIANTS, CONSENT_METHODS } from './blog/types';
 export type { BlogCategory, BlogCtaKind, BlogPageWidth, BlogPostDetail, BlogPostReach, BlogPostStatus, BlogPostSummary, PostFact, PostFieldsDraft, PostReadinessCheck, ReaderQuestion, CtaActionKind, CtaItem, CtaStage, CtaVariant, ConsentMethod, Story, StoryStatus } from './blog/types';
+
+// The public blog's reading features (S8b-1): client components, so they live in the root ('use client') bundle.
+// The reader-facing list and post are in `./public` (server-safe).
+export { KeepReading, DEFAULT_KEEP_READING_WORDS } from './blog/reading/KeepReading';
+export type { KeepReadingProps, KeepReadingWords } from './blog/reading/KeepReading';
+export { RememberReading, DEFAULT_REMEMBER_READING_WORDS } from './blog/reading/RememberReading';
+export type { PickedPost, ReadingHistoryPorts, RememberReadingProps, RememberReadingWords } from './blog/reading/RememberReading';
+export { guestReadingStore, useGuestReading } from './blog/reading/guestStore';
+export type { GuestReadingStore, ReadEntry } from './blog/reading/guestStore';

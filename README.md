@@ -43,6 +43,18 @@ A screen calls `useGrowthChrome({ title, subtitle, parent, activeTab, actions })
 By values (`theme={{ accent: '#4361EE' }}` sets `--gr-*` CSS variables) and named variants
 (`variant="glass" | "plain"`), never free className props.
 
+## The public blog (reader-facing)
+
+`@shirahcan/growth-ui/public` is built WITHOUT `'use client'`, so a product's server components render it:
+`PublicBlogList` (category row, cards, pager) and `PublicPostArticle` (header, written body or the host's design,
+sources, reader questions, disclaimer, call to action). No provider; the host passes ports, never class names:
+`Link`, `column(part, children)` (its page frame), `design`, `head`, `signup`, `ask`, `after`, and `words`.
+Import `@shirahcan/growth-ui/public.css` on those pages (not `styles.css`, the admin sheet).
+
+The reading features are client components in the root: `KeepReading` (a guest's history, only in their browser,
+under the product's `storageKey`) and `RememberReading` (signed-in readers, off until they say yes, through the
+product's `history` ports). A server page mounts them through a small client wrapper that supplies the ports.
+
 ## Rules every screen in this package follows
 
 - Page roots `max-w-7xl mx-auto` with `overflow-x-clip`; modals bounded at `max-h-[90vh]` with a real inner
