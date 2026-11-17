@@ -1,0 +1,78 @@
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { describe, expect, it, vi } from 'vitest';
+import { GrowthProvider, createPostSteps, useCreatePostFlow, type CreatePostFlow } from '../src';
+
+const hrefFor = (tab: string) => `/admin/growth/${tab}`;
+const layouts = [
+  { key: 'full-guide', name: 'Classic', parts: 9 },
+  { key: 'news', name: 'News', parts: 4 },
+];
+
+/** A host wizard in miniature: draws the steps and keeps the flow for the test to drive. */
+function Host({ onFlow, defaultTemplate }: { onFlow: (f: CreatePostFlow) => void; defaultTemplate?: string }) {
+  const flow = useCreatePostFlow({ defaultTemplate });
+  onFlow(flow);
+  const step = createPostSteps(flow)[0]!;
+
+  return <div>{step.render()}<p data-testid="valid">{step.validate() ?? 'ok'}</p></div>;
+}
+
+function mount(request: ReturnType<typeof vi.fn>, defaultTemplate?: string) {
+  let flow: CreatePostFlow | null = null;
+  render(
+    <GrowthProvider product="portify" request={request as never} hrefFor={hrefFor as never} onError={vi.fn()} onNotice={vi.fn()} words={{ audiences: {}, product: 'Portify' }}>
+      <Host onFlow={(f) => { flow = f; }} defaultTemplate={defaultTemplate} />
+    </GrowthProvider>,
+  );
+
+  return () => flow as unknown as CreatePostFlow;
+}
+
+/** Creating a post (blog on growth-service F1): pick a template, the post starts as its structure. */
+describe('creating a post', () => {
+  it('offers the post templates with the product’s default picked, and creates the post from the one chosen', async () => {
+    const request = vi.fn(async (method: string, path: string, body?: unknown) => {
+      if (method === 'GET') return { data: { layouts } };
+
+      return { data: { post: { uuid: 'new-1', body_format: 'pml', layout_key: (body as { layout_key: string }).layout_key } } };
+    });
+    const flow = mount(request, 'full-guide');
+
+    expect(await screen.findByRole('radio', { name: 'Classic' })).toBeTruthy();
+    expect(screen.getByRole('radio', { name: 'Classic' }).getAttribute('aria-checked')).toBe('true');
+    expect(request.mock.calls[0]?.slice(0, 2)).toEqual(['GET', 'layouts?kind=post']);
+    expect(screen.getByText('Classic: 9 parts.')).toBeTruthy();
+
+    fireEvent.click(screen.getByRole('radio', { name: 'News' }));
+    let created: Awaited<ReturnType<CreatePostFlow['create']>> = null;
+    await act(async () => {
+      created = await flow().create();
+    });
+
+    expect(request).toHaveBeenLastCalledWith('POST', 'blog/posts', { layout_key: 'news' });
+    expect(created).toMatchObject({ uuid: 'new-1', layout_key: 'news' });
+  });
+
+  it('says plainly when the blog has no post templates, and the step cannot go on', async () => {
+    mount(vi.fn(async () => ({ data: { layouts: [] } })));
+
+    expect(await screen.findByText(/no post templates set up yet/)).toBeTruthy();
+    expect(screen.getByTestId('valid').textContent).toBe('Pick a template to start from.');
+  });
+
+  it('a refused create is said on the step in the service’s words', async () => {
+    const refused = Object.assign(new Error('refused'), { response: { status: 422, data: { errors: { layout_key: ['"News" is retired, so a new post cannot start from it.'] } } } });
+    const request = vi.fn(async (method: string) => {
+      if (method === 'GET') return { data: { layouts } };
+      throw refused;
+    });
+    const flow = mount(request);
+    await screen.findByRole('radio', { name: 'Classic' });
+
+    await act(async () => {
+      await flow().create();
+    });
+
+    await waitFor(() => expect(screen.getByRole('alert').textContent).toBe('"News" is retired, so a new post cannot start from it.'));
+  });
+});

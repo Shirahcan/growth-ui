@@ -1,4 +1,6 @@
+import { useMemo } from 'react';
 import { useGrowth } from '../GrowthProvider';
+import { useGrowthChrome } from '../shell/useGrowthChrome';
 import { Button, Card, Field, INPUT, LoadError, Loading, Notice, Pill, Refusal } from '../ui/primitives';
 import { FactsField, ReaderQuestionsField } from './PostListFields';
 import { PostPublishBar } from './PostPublishBar';
@@ -26,6 +28,8 @@ export interface PostSettingsProps {
   ctaWords?: Partial<Record<BlogCtaKind, string>>;
   /** What a "service" ending's reference is, in the product's words. */
   serviceRefHint?: string;
+  /** The host's designer for this post, or null when it has none for it (a written post). */
+  designHref?: (post: BlogPostDetail) => string | null;
 }
 
 /**
@@ -35,14 +39,19 @@ export interface PostSettingsProps {
  * address part is the service's and shown, not edited. A copy older than what is stored is never saved over it: the
  * author keeps theirs or loads the latest.
  */
-export function PostSettings({ uuid, ctaWords, serviceRefHint }: PostSettingsProps) {
-  const { canEdit, words } = useGrowth();
+export function PostSettings({ uuid, ctaWords, serviceRefHint, designHref }: PostSettingsProps) {
+  const { canEdit, words, Link } = useGrowth();
   const f = usePostFields(uuid);
+  const title = f.post ? ((f.post.title ?? '').trim() || 'Untitled post') : '';
+  // The post names itself in the host's top bar, under the Blog crumb (directive: hoist page chrome, no body h1).
+  const chrome = useMemo(() => ({ title, parent: { label: 'Blog', tab: 'blog' as const }, activeTab: 'blog' as const, actions: [] }), [title]);
+  useGrowthChrome(chrome);
 
   if (f.loadError) return <Card><LoadError message="The post could not be opened." onRetry={f.reload} /></Card>;
   if (!f.post || !f.draft) return <Card><Loading /></Card>;
 
   const { post, draft, set } = f;
+  const design = designHref ? designHref(post) : null;
   const cta = { ...DEFAULT_CTA_WORDS, ...ctaWords };
   const audiences = Object.entries(words.audiences);
   const width = PAGE_WIDTHS.find((w) => w.value === draft.page_width);
@@ -56,7 +65,10 @@ export function PostSettings({ uuid, ctaWords, serviceRefHint }: PostSettingsPro
         <div className="gr-stack">
           <div className="gr-row-between">
             <h2 className="gr-section-title">Post details</h2>
-            <span className="gr-hint" role="status">{f.saving ? 'Saving…' : f.dirty ? 'Unsaved changes' : 'Saved'}</span>
+            <span className="gr-row-between">
+              <span className="gr-hint" role="status">{f.saving ? 'Saving…' : f.dirty ? 'Unsaved changes' : 'Saved'}</span>
+              {design ? <Link href={design} className="gr-button">Open the design</Link> : null}
+            </span>
           </div>
           <PostPublishBar post={post} flush={f.flush} onPost={f.adopt} />
 

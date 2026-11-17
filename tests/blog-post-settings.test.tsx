@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { GrowthProvider, PostSettings, postDraftFrom, postFieldsBody, type BlogPostDetail } from '../src';
+import { GrowthProvider, PostSettings, postDraftFrom, postFieldsBody, useGrowthChromeState, type BlogPostDetail } from '../src';
 
 const hrefFor = (tab: string) => `/admin/growth/${tab}`;
 
@@ -53,6 +53,30 @@ describe('the post settings', () => {
     expect(screen.getByText('1 thing left')).toBeTruthy();
     expect(screen.getByText('Add at least two.')).toBeTruthy();
     expect(screen.getByLabelText('Page width')).toBeTruthy(); // a written post
+  });
+
+  it('names the post in the host’s top bar under the Blog crumb, and links a designed post to its designer', async () => {
+    function Bar() {
+      const chrome = useGrowthChromeState();
+
+      return <div data-testid="bar">{chrome.title}|{chrome.parent?.label ?? ''}</div>;
+    }
+    const designed = { ...post, body_format: 'pml' as const, title: '' };
+    render(
+      <GrowthProvider product="portify" request={server(designed) as never} hrefFor={hrefFor as never} onError={vi.fn()} onNotice={vi.fn()} words={{ audiences: {}, product: 'Portify' }}>
+        <Bar />
+        <PostSettings uuid="p1" designHref={(p) => (p.body_format === 'pml' ? `/design/${p.uuid}` : null)} />
+      </GrowthProvider>,
+    );
+
+    expect((await screen.findByRole('link', { name: 'Open the design' })).getAttribute('href')).toBe('/design/p1');
+    expect(screen.getByTestId('bar').textContent).toBe('Untitled post|Blog');
+  });
+
+  it('a written post has no designer link', async () => {
+    mount(server(), { designHref: (p) => (p.body_format === 'pml' ? `/design/${p.uuid}` : null) });
+    expect(await screen.findByLabelText('Title')).toBeTruthy();
+    expect(screen.queryByRole('link', { name: 'Open the design' })).toBeNull();
   });
 
   it('saves a moment after the last change, from the version it saw, and the next save from the one it got back', async () => {
