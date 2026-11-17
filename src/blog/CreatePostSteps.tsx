@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { ChoiceGroup, Field, LoadError, Loading, Notice, Refusal } from '../ui/primitives';
 import { FilePicker } from '../ui/FilePicker';
+import { TemplateCards } from './TemplateCards';
 import type { CreatePostFlow } from './useCreatePostFlow';
 
 /**
@@ -22,9 +23,11 @@ export interface CreatePostStep {
 export interface CreatePostStepsOptions {
   /** Offer "Start from a document": the file kinds the host reads, and its upload limit in MB. Absent: no such step. */
   documents?: { accept: string; maxMb: number; assistant: string };
+  /** Draws a template's preview the way the product draws a post (its PML renderer); absent: the cards show the shape. */
+  renderPreview?: (tree: unknown[]) => ReactNode;
 }
 
-function TemplateStep({ flow }: { flow: CreatePostFlow }) {
+function TemplateStep({ flow, renderPreview }: { flow: CreatePostFlow; renderPreview?: CreatePostStepsOptions['renderPreview'] }) {
   if (flow.loadError) return <LoadError message="The templates could not be loaded." onRetry={flow.reload} />;
   if (flow.templates === null) return <Loading label="Loading the templates…" />;
   if (flow.templates.length === 0) {
@@ -40,13 +43,14 @@ function TemplateStep({ flow }: { flow: CreatePostFlow }) {
         A template is the post&rsquo;s structure: its parts, in order, each saying what goes in it. The post opens in the designer with every
         part in place, and the checks before publishing make sure none is left out.
       </p>
-      <ChoiceGroup
-        label="Template"
+      <TemplateCards
+        templates={flow.templates}
+        previews={flow.previews}
         value={flow.draft.layout_key}
-        options={flow.templates.map((t) => ({ value: t.key, label: t.name }))}
         onChange={(key) => flow.patch({ layout_key: key })}
+        renderPreview={renderPreview}
       />
-      {picked ? <p className="gr-hint">{picked.name}: {picked.parts} {picked.parts === 1 ? 'part' : 'parts'}.</p> : null}
+      {picked ? <p className="gr-hint">{picked.name} opens with every part in place, as its preview shows; you fill it in, or the assistant does from your document.</p> : null}
       <Refusal message={flow.refusal} />
     </div>
   );
@@ -113,7 +117,7 @@ export function createPostSteps(flow: CreatePostFlow, options: CreatePostStepsOp
       id: 'template',
       title: 'Pick a template',
       validate: () => (flow.draft.layout_key ? null : 'Pick a template to start from.'),
-      render: () => <TemplateStep flow={flow} />,
+      render: () => <TemplateStep flow={flow} renderPreview={options.renderPreview} />,
     },
   ];
 

@@ -12,6 +12,16 @@ export interface PostTemplate {
   parts: number;
 }
 
+/**
+ * What a template starts as, for the picker's preview card (owner 2026-11-17: "preview cards (similar to what MS Word
+ * does) so the user can see what to expect"): the service's `GET layouts/{key}?starter=1`. `tree` is the starter drawn
+ * as a new post from it (sample words in the header); `nodes` its structure, for a picture drawn without the host.
+ */
+export interface TemplatePreview {
+  nodes: unknown[];
+  tree: unknown[] | null;
+}
+
 /** What the create flow decides. Kept as the host wizard's draft, so an interrupted pick is resumed (files are not). */
 export interface CreatePostDraft {
   layout_key: string | null;
@@ -30,6 +40,8 @@ export interface CreatePostFlow {
   setCover: (file: File | null) => void;
   /** null while loading. */
   templates: PostTemplate[] | null;
+  /** Each template's preview by key: undefined while loading, null when it could not be drawn (the card shows none). */
+  previews: Record<string, TemplatePreview | null>;
   loadError: string | null;
   reload: () => void;
   creating: boolean;
@@ -58,6 +70,7 @@ export function useCreatePostFlow(options: CreatePostFlowOptions = {}): CreatePo
   const [reloadKey, setReloadKey] = useState(0);
   const [creating, setCreating] = useState(false);
   const [refusal, setRefusal] = useState<string | null>(null);
+  const [previews, setPreviews] = useState<Record<string, TemplatePreview | null>>({});
   const { defaultTemplate } = options;
 
   const patch = useCallback((p: Partial<CreatePostDraft>) => setDraft((d) => ({ ...d, ...p })), []);
@@ -86,6 +99,27 @@ export function useCreatePostFlow(options: CreatePostFlowOptions = {}): CreatePo
     };
   }, [request, onError, defaultTemplate, reloadKey]);
 
+  // Each template's preview, once the list is in (a few templates; one read each). A preview that cannot be drawn is
+  // only a missing picture: the choice still works, so nothing is reported to the person.
+  useEffect(() => {
+    if (!templates) return;
+    let live = true;
+    templates.forEach((t) => {
+      request<Envelope<{ starter: TemplatePreview }>>('GET', `layouts/${encodeURIComponent(t.key)}?starter=1`)
+        .then((res) => {
+          const starter = unwrap(res).starter;
+          if (live) setPreviews((p) => ({ ...p, [t.key]: { nodes: starter?.nodes ?? [], tree: starter?.tree ?? null } }));
+        })
+        .catch(() => {
+          if (live) setPreviews((p) => ({ ...p, [t.key]: null }));
+        });
+    });
+
+    return () => {
+      live = false;
+    };
+  }, [request, templates]);
+
   const create = useCallback(async (): Promise<BlogPostDetail | null> => {
     if (!draft.layout_key) return null;
     setCreating(true);
@@ -105,5 +139,5 @@ export function useCreatePostFlow(options: CreatePostFlowOptions = {}): CreatePo
     }
   }, [request, onError, draft.layout_key]);
 
-  return { draft, patch, document, setDocument, cover, setCover, templates, loadError, reload: () => setReloadKey((k) => k + 1), creating, refusal, create };
+  return { draft, patch, document, setDocument, cover, setCover, templates, previews, loadError, reload: () => setReloadKey((k) => k + 1), creating, refusal, create };
 }

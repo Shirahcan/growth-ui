@@ -41,7 +41,7 @@ describe('creating a post', () => {
     expect(await screen.findByRole('radio', { name: 'Classic' })).toBeTruthy();
     expect(screen.getByRole('radio', { name: 'Classic' }).getAttribute('aria-checked')).toBe('true');
     expect(request.mock.calls[0]?.slice(0, 2)).toEqual(['GET', 'layouts?kind=post']);
-    expect(screen.getByText('Classic: 9 parts.')).toBeTruthy();
+    expect(screen.getByText('9 parts')).toBeTruthy();
 
     fireEvent.click(screen.getByRole('radio', { name: 'News' }));
     let created: Awaited<ReturnType<CreatePostFlow['create']>> = null;
