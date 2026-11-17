@@ -36,6 +36,9 @@ export interface BrandKitColours {
   on_accent: string | null;
   surface: string | null;
   text: string | null;
+  /** The emphasis colour (the decision button); unset falls back to `text`. */
+  strong: string | null;
+  on_strong: string | null;
 }
 
 /** A product's brand kit on growth-service (G2e): unset is null and listed in `missing`, never defaulted. */

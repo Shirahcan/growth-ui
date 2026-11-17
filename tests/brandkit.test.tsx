@@ -45,6 +45,22 @@ describe('the brand kit', () => {
     await waitFor(() => expect(request).toHaveBeenCalledWith('PUT', 'settings/brand', { logo_url: 'https://portify.example/logo.png', fonts: { body: '' } }));
   });
 
+  it('edits the emphasis pair (the decision button) with its own sample and contrast warning', async () => {
+    const request = vi.fn(async (method: string) => ({ data: { brand: method === 'PUT' ? kit({ colours: { accent: '#4361EE', on_accent: '#FFFFFF', surface: null, text: null, strong: '#050351', on_strong: '#FFFFFF' } }) : kit() } }));
+    mount(request);
+
+    fireEvent.change(await screen.findByLabelText('Emphasis colour (the decision button)'), { target: { value: '#050351' } });
+    fireEvent.change(screen.getByLabelText('Text on the emphasis colour'), { target: { value: '#FFFFFF' } });
+    expect(screen.getByText('Book a consultation: the decision button')).toBeTruthy();
+    expect(screen.queryByText(/hard to read together/)).toBeNull();
+
+    fireEvent.click(screen.getByText('Save brand kit'));
+    await waitFor(() => expect(request).toHaveBeenCalledWith('PUT', 'settings/brand', { colours: { strong: '#050351', on_strong: '#FFFFFF' } }));
+
+    fireEvent.change(screen.getByLabelText('Text on the emphasis colour'), { target: { value: '#0E0C5E' } });
+    expect(screen.getByText(/hard to read together/)).toBeTruthy();
+  });
+
   it('flags a colour pair that is hard to read before it is saved', async () => {
     mount(vi.fn(async () => ({ data: { brand: kit() } })));
 

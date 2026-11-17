@@ -22,6 +22,10 @@ const COLOUR_FIELDS: Array<{ key: keyof BrandKitColours; label: string }> = [
   { key: 'on_accent', label: 'Text on the accent' },
   { key: 'surface', label: 'Surface colour' },
   { key: 'text', label: 'Text colour' },
+  // The emphasis pair (2026-11-17): the decision call to action's button, the reference studio's navy. Unset, it falls
+  // back to the text colour, and "Not set yet" says so.
+  { key: 'strong', label: 'Emphasis colour (the decision button)' },
+  { key: 'on_strong', label: 'Text on the emphasis colour' },
 ];
 
 const HEX = /^#[0-9a-fA-F]{6}$/;
@@ -104,6 +108,7 @@ export function BrandKitView({ senderNote }: BrandKitViewProps) {
 
   const text = (value: string) => (value.trim() === '' ? null : value);
   const ratio = contrastRatio(draft.colours.accent, draft.colours.on_accent);
+  const strongRatio = contrastRatio(draft.colours.strong, draft.colours.on_strong);
 
   return (
     <Card>
@@ -149,6 +154,17 @@ export function BrandKitView({ senderNote }: BrandKitViewProps) {
             </div>
             {ratio !== null && ratio < 4.5 ? (
               <p className="gr-field-error">These two colours are hard to read together (contrast {ratio.toFixed(1)}:1; aim for at least 4.5:1).</p>
+            ) : null}
+          </div>
+        ) : null}
+
+        {draft.colours.strong && HEX.test(draft.colours.strong) ? (
+          <div className="gr-stack">
+            <div style={{ background: draft.colours.strong, color: draft.colours.on_strong ?? undefined, padding: '16px 20px', borderRadius: 12, fontWeight: 600 }}>
+              Book a consultation: the decision button
+            </div>
+            {strongRatio !== null && strongRatio < 4.5 ? (
+              <p className="gr-field-error">These two colours are hard to read together (contrast {strongRatio.toFixed(1)}:1; aim for at least 4.5:1).</p>
             ) : null}
           </div>
         ) : null}
