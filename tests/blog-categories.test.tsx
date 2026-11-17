@@ -32,7 +32,7 @@ describe('the blog categories manager', () => {
 
     expect(await screen.findByText('Express Entry')).toBeTruthy();
     // The provider always passes a body argument (undefined for a read), so compare the method and the address.
-    expect(request.mock.calls[0].slice(0, 2)).toEqual(['GET', 'blog/categories']);
+    expect(request.mock.calls[0]?.slice(0, 2)).toEqual(['GET', 'blog/categories']);
     expect(screen.getByText('/express-entry')).toBeTruthy();
     expect(screen.getByText('Applicants')).toBeTruthy();
     expect(screen.getByText('12 posts')).toBeTruthy();
