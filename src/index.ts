@@ -89,6 +89,8 @@ export type { BlogCategory, BlogCtaKind, BlogPageWidth, BlogPostDetail, BlogPost
 // The reader-facing list and post are in `./public` (server-safe).
 export { PostHelpers } from './blog/PostHelpers';
 export type { PostHelpersProps, ProofreadIssue } from './blog/PostHelpers';
+export { PostSeoPanel, PostSeoScore, seoScoreColor, usePostSeo } from './blog/PostSeoPanel';
+export type { PostSeoPanelProps, SeoGroup, SeoItem, SeoJump, SeoResult } from './blog/PostSeoPanel';
 export { KeepReading, DEFAULT_KEEP_READING_WORDS } from './blog/reading/KeepReading';
 export type { KeepReadingProps, KeepReadingWords } from './blog/reading/KeepReading';
 export { RememberReading, DEFAULT_REMEMBER_READING_WORDS } from './blog/reading/RememberReading';
