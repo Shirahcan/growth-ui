@@ -20,6 +20,11 @@ export interface PostTemplate {
 export interface TemplatePreview {
   nodes: unknown[];
   tree: unknown[] | null;
+  /**
+   * An EMAIL template's starter drawn as the email itself (blog on growth-service N1e): the card shows it in a
+   * sandboxed frame, so no host renderer is needed. Absent for posts.
+   */
+  html?: string | null;
 }
 
 /** What the create flow decides. Kept as the host wizard's draft, so an interrupted pick is resumed (files are not). */

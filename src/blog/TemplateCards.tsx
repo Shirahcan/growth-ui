@@ -68,6 +68,10 @@ export function TemplateCards({ templates, previews, value, onChange, renderPrev
                 <span className="gr-template-loading">Drawing the preview…</span>
               ) : preview && preview.tree && renderPreview ? (
                 renderPreview(preview.tree)
+              ) : preview && preview.html ? (
+                // An email template is html already: drawn in a frame with NO permissions (no scripts, no same origin),
+                // so a starter's markup can never run or reach the page; a picture, like every card.
+                <iframe title={`${t.name} preview`} sandbox="" srcDoc={withPicturePlaceholders(preview.html)} tabIndex={-1} className="gr-template-frame" style={{ width: PAGE_WIDTH, height: 1400, border: 0 }} />
               ) : (
                 <Shape nodes={preview?.nodes ?? []} />
               )}
@@ -88,6 +92,19 @@ export function TemplateCards({ templates, previews, value, onChange, renderPrev
       })}
     </div>
   );
+}
+
+/** A grey "picture goes here" box, for a template's picture the author has not chosen yet. */
+const PICTURE_PLACEHOLDER = `data:image/svg+xml,${encodeURIComponent(
+  '<svg xmlns="http://www.w3.org/2000/svg" width="600" height="240" viewBox="0 0 600 240"><rect width="600" height="240" fill="#e2e8f0"/><text x="300" y="128" text-anchor="middle" font-family="Arial, sans-serif" font-size="22" fill="#64748b">Picture</text></svg>',
+)}`;
+
+/**
+ * An email template's preview with each picture still waiting for its address (`src="{{hero_image_url}}"`) drawn as a
+ * grey placeholder instead of a broken image: the template has a picture there, and the author picks it.
+ */
+function withPicturePlaceholders(html: string): string {
+  return html.replace(/(<img\b[^>]*?\ssrc=)(["'])\{\{\s*[a-z0-9_]+\s*\}\}\2/gi, (_m, before: string, quote: string) => `${before}${quote}${PICTURE_PLACEHOLDER}${quote}`);
 }
 
 /** A page drawn at PAGE_WIDTH and scaled to the card's width; a picture, never something to press. */
