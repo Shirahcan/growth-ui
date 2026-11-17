@@ -67,11 +67,13 @@ describe('the post search panel', () => {
 
   it('saves a keyword on leaving the box, with the fields revision, then reads the checks again', async () => {
     const request = requestFor();
-    mount(request);
+    const onSaved = vi.fn();
+    mount(request, { onSaved });
 
     const focus = (await screen.findByDisplayValue('work permit')) as HTMLInputElement;
     fireEvent.change(focus, { target: { value: 'canada work permit' } });
     await act(async () => { fireEvent.blur(focus); });
+    expect(onSaved).toHaveBeenCalledTimes(1);
 
     expect(request).toHaveBeenCalledWith('PUT', 'blog/posts/p1/document/fields/focus_keyword', { value: 'canada work permit', revision: '3', session: 'growth-seo:p1' });
     await waitFor(() => expect(request.mock.calls.filter(([m, p]) => m === 'GET' && String(p).endsWith('/document/seo')).length).toBe(2));

@@ -93,6 +93,8 @@ export interface PostSeoPanelProps {
   refreshKey?: unknown;
   /** Where a check is fixed: the host scrolls to the part or opens the field. */
   onJump?: (to: SeoJump) => void;
+  /** A keyword was saved here: the host reads the score again wherever else it shows it (its bar's chip). */
+  onSaved?: () => void;
 }
 
 /**
@@ -102,7 +104,7 @@ export interface PostSeoPanelProps {
  * their groups, each opening where it is fixed. The thresholds live in the product's settings on the service, so the
  * labels carry the numbers and this panel never restates them.
  */
-export function PostSeoPanel({ uuid, refreshKey, onJump }: PostSeoPanelProps) {
+export function PostSeoPanel({ uuid, refreshKey, onJump, onSaved }: PostSeoPanelProps) {
   const { request, onError, canEdit } = useGrowth();
   const [saves, setSaves] = useState(0);
   const { seo, failed, reload } = usePostSeo(uuid, `${String(refreshKey)}:${saves}`);
@@ -135,6 +137,7 @@ export function PostSeoPanel({ uuid, refreshKey, onJump }: PostSeoPanelProps) {
       const saved = unwrap(res);
       setFields({ values: { ...fields.values, [name]: value }, revision: saved.revision });
       setSaves((n) => n + 1);
+      onSaved?.();
     } catch (e) {
       // Changed somewhere else meanwhile: say so and offer the latest, never overwrite.
       if ((e as { response?: { status?: number } })?.response?.status === 409) setConflict(true);
