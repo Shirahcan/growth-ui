@@ -11,12 +11,13 @@ const STATUS_FILTERS: Array<{ value: StatusFilter; label: string }> = [
   { value: 'all', label: 'All' },
   { value: 'published', label: 'Published' },
   { value: 'draft', label: 'Drafts' },
-  { value: 'stale', label: 'Facts changed' },
+  { value: 'stale', label: 'Facts need a look' },
 ];
 
 /** The one status a reader of the list needs, most urgent first (the same six Portify's list showed). */
 export function postStatus(post: BlogPostSummary): { label: string; tone: 'muted' | 'accent' | 'good' | 'bad' } {
-  if (post.stale_reason) return { label: 'Facts changed', tone: 'bad' };
+  // A figure moved, was not checked at publish, or is past its review date: the hint line under the title says which.
+  if (post.stale_reason) return { label: 'Facts need a look', tone: 'bad' };
   if (post.live && post.has_unpublished_changes) return { label: 'Live, changes waiting', tone: 'accent' };
   if (post.live) return { label: 'Published', tone: 'good' };
   if (post.status === 'scheduled') return { label: 'Scheduled', tone: 'accent' };

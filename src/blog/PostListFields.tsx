@@ -3,7 +3,7 @@ import type { PostFact, ReaderQuestion } from './types';
 
 /**
  * The figures a post quotes, each with the date it should be checked again (blog on growth-service S5). A fact past its
- * date, or one whose source changed, is what turns a post "Facts changed" on the list.
+ * date, or one whose source changed, is what marks a post "Facts need a look" on the list.
  */
 export function FactsField({ facts, onChange, disabled }: { facts: PostFact[]; onChange: (next: PostFact[]) => void; disabled?: boolean }) {
   const at = (i: number, patch: Partial<PostFact>) => onChange(facts.map((f, j) => (j === i ? { ...f, ...patch } : f)));
@@ -11,7 +11,7 @@ export function FactsField({ facts, onChange, disabled }: { facts: PostFact[]; o
   return (
     <fieldset className="gr-stack" disabled={disabled}>
       <legend className="gr-label">Facts this post quotes</legend>
-      <p className="gr-hint">Each figure with the date to check it again. A fact past its date marks the post "Facts changed".</p>
+      <p className="gr-hint">Each figure with the date to check it again. A fact past its date marks the post "Facts need a look".</p>
       {facts.length === 0 ? <p className="gr-hint">No facts yet.</p> : null}
       {facts.map((fact, i) => (
         <div key={i} className="gr-filters">

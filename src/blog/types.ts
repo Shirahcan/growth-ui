@@ -113,7 +113,7 @@ export interface BlogPostReach {
 export type BlogPageWidth = 'page' | 'wide' | 'normal' | 'reading';
 export type BlogCtaKind = 'none' | 'service' | 'booking' | 'subscribe';
 
-/** A figure a post quotes, with the date it should be checked again (what turns a post "Facts changed"). */
+/** A figure a post quotes, with the date it should be checked again (what marks a post "Facts need a look"). */
 export interface PostFact {
   text: string;
   review_by: string | null;

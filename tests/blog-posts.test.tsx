@@ -41,7 +41,7 @@ describe('the blog posts list', () => {
     const list = within(screen.getByRole('list', { name: 'Posts' }));
     expect(list.getByText('Published')).toBeTruthy();
     expect(list.getByText('Draft')).toBeTruthy();
-    expect(list.getByText('Facts changed')).toBeTruthy();
+    expect(list.getByText('Facts need a look')).toBeTruthy();
     expect(list.getByText('The biometrics fee it quotes changed on 1 Dec.')).toBeTruthy();
     expect(list.getByText('1 reader, 3 subscribers')).toBeTruthy();
     expect(list.getAllByText('0 readers, 0 subscribers')).toHaveLength(2); // a post the host has no figures for
@@ -63,12 +63,12 @@ describe('the blog posts list', () => {
     expect(screen.queryByText(/readers?,/)).toBeNull();
   });
 
-  it('asks the service only for the filters in use, and Facts changed asks for stale posts', async () => {
+  it('asks the service only for the filters in use, and Facts need a look asks for stale posts', async () => {
     const request = server([]);
     mount(request);
     await waitFor(() => expect(request.mock.calls.some(([m, p]) => m === 'GET' && p === 'blog/posts')).toBe(true));
 
-    fireEvent.click(screen.getByRole('radio', { name: 'Facts changed' }));
+    fireEvent.click(screen.getByRole('radio', { name: 'Facts need a look' }));
     await waitFor(() => expect(request.mock.calls.some(([, p]) => p === 'blog/posts?status=stale')).toBe(true));
     expect(await screen.findByText('No posts match. Try another filter.')).toBeTruthy();
   });
@@ -122,7 +122,7 @@ describe('the blog posts list', () => {
     expect(postStatus({ ...live, has_unpublished_changes: true }).label).toBe('Live, changes waiting');
     expect(postStatus({ ...base, uuid: 'x', id: 9, title: null, status: 'scheduled' }).label).toBe('Scheduled');
     expect(postStatus({ ...base, uuid: 'x', id: 9, title: null, status: 'unpublished' }).label).toBe('Unpublished');
-    expect(postStatus(stale).label).toBe('Facts changed'); // facts outrank everything, even a live post
+    expect(postStatus(stale).label).toBe('Facts need a look'); // facts outrank everything, even a live post
 
     expect(postsPath('all', '', '  ')).toBe('blog/posts');
     expect(postsPath('draft', 4, 'crs score')).toBe('blog/posts?status=draft&category=4&q=crs+score');
