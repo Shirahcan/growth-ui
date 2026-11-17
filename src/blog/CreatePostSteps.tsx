@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { ChoiceGroup, Field, LoadError, Loading, Notice, Refusal } from '../ui/primitives';
+import { FilePicker } from '../ui/FilePicker';
 import type { CreatePostFlow } from './useCreatePostFlow';
 
 /**
@@ -7,8 +8,9 @@ import type { CreatePostFlow } from './useCreatePostFlow';
  * decision per step, each teaching what it decides. Owner 2026-11-17: "templates screen, with the classic (the default)
  * selected -> choice to proceed with a post doc/file and optional cover photo, or proceed directly -> the designer".
  *
- * The host's submit creates the post (`flow.create()`), and when a document was chosen, reads it and asks the service to
- * prepare the post inside its template (the host owns files: it reads them and keeps the cover photo in its own media).
+ * The host's submit creates the post (`flow.create()`), and when a document was chosen, hands it to the assistant's
+ * console in the designer, which prepares the post inside its template (owner 2026-11-17: "When a doc/file is uploaded,
+ * the Porter console itself should be used!"). The host owns files: it stores them and keeps the cover in its own media.
  */
 export interface CreatePostStep {
   id: 'template' | 'start';
@@ -50,17 +52,12 @@ function TemplateStep({ flow }: { flow: CreatePostFlow }) {
   );
 }
 
-function FilePick({ label, hint, accept, file, onPick, maxMb }: { label: string; hint: string; accept: string; file: File | null; onPick: (f: File | null) => void; maxMb: number }) {
+function FilePick({ label, hint, kinds, accept, file, onPick, maxMb }: { label: string; hint: string; kinds: string; accept: string; file: File | null; onPick: (f: File | null) => void; maxMb: number }) {
   const tooBig = file !== null && file.size > maxMb * 1024 * 1024;
 
   return (
     <Field label={label} hint={hint} error={tooBig ? `The file is larger than ${maxMb} MB. Save a smaller copy and choose it again.` : null}>
-      {(id) => (
-        <>
-          <input id={id} type="file" accept={accept} onChange={(e) => onPick(e.target.files?.[0] ?? null)} />
-          {file ? <span className="gr-hint">{file.name}</span> : null}
-        </>
-      )}
+      {(id) => <FilePicker id={id} accept={accept} file={file} onPick={onPick} kinds={kinds} invalid={tooBig} />}
     </Field>
   );
 }
@@ -70,9 +67,9 @@ function StartStep({ flow, documents }: { flow: CreatePostFlow; documents: NonNu
     <div className="gr-stack">
       <p className="gr-row-title">Do you have the post written somewhere already?</p>
       <p className="gr-hint">
-        With a document, {documents.assistant} reads it and fills every part of the template with its words, plus the title, summary and search
-        details. Anything the document does not say is marked for a person to check, so nothing is published unchecked. You see all of it in
-        the designer before anything goes live.
+        With a document, the designer opens with {documents.assistant}&rsquo;s console, where {documents.assistant} reads it and fills every part of
+        the template with its words, plus the title, summary and search details. Anything the document does not say is marked for a person to
+        check, so nothing is published unchecked. You see all of it in the designer before anything goes live.
       </p>
       <ChoiceGroup
         label="How to start"
@@ -88,6 +85,7 @@ function StartStep({ flow, documents }: { flow: CreatePostFlow; documents: NonNu
           <FilePick
             label="The document"
             hint={`A PDF, a Word document, or a text or Markdown file, up to ${documents.maxMb} MB.`}
+            kinds="a PDF, a Word document, or a text or Markdown file"
             accept={documents.accept}
             file={flow.document}
             onPick={flow.setDocument}
@@ -96,6 +94,7 @@ function StartStep({ flow, documents }: { flow: CreatePostFlow; documents: NonNu
           <FilePick
             label="A cover photo (optional)"
             hint={`A JPG, PNG or WebP, up to ${documents.maxMb} MB. You can add or change it later in the designer.`}
+            kinds="a JPG, PNG or WebP photo"
             accept=".jpg,.jpeg,.png,.webp"
             file={flow.cover}
             onPick={flow.setCover}

@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from 'react';
+import { FilePicker } from '../ui/FilePicker';
 import { ChoiceGroup, Field, INPUT, Notice, Refusal } from '../ui/primitives';
 import { CONSENT_METHODS } from './types';
 import { localToday, type StoryFlow } from './useStoryFlow';
@@ -39,6 +40,7 @@ function Lead({ decides, children }: { decides: string; children?: ReactNode }) 
 function Evidence({ flow, options }: { flow: StoryFlow; options: StoryStepsOptions }) {
   const [busy, setBusy] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
+  const [kept, setKept] = useState<string | null>(null);
   const max = options.maxEvidenceMb ?? 5;
 
   if (!options.uploadEvidence) return null;
@@ -53,6 +55,7 @@ function Evidence({ flow, options }: { flow: StoryFlow; options: StoryStepsOptio
     setBusy(true);
     try {
       flow.patch({ evidence_ref: await options.uploadEvidence(file) });
+      setKept(file.name);
     } catch (e) {
       setProblem(e instanceof Error ? e.message : 'The proof could not be uploaded.');
     } finally {
@@ -63,8 +66,23 @@ function Evidence({ flow, options }: { flow: StoryFlow; options: StoryStepsOptio
   return (
     <Field label="The proof (optional)" hint={`The signed form or the client's email, up to ${max} MB. It is kept privately and never shown with the story.`} error={problem}>
       {(id) => (
-        <div className="gr-stack">
-          <input id={id} type="file" accept=".pdf,.png,.jpg,.jpeg,.webp,.eml,.msg" disabled={busy} onChange={(e) => pick(e.target.files?.[0])} />
+        <div className="gr-stack-tight">
+          <FilePicker
+            id={id}
+            accept=".pdf,.png,.jpg,.jpeg,.webp,.eml,.msg"
+            kinds="a PDF, a photo, or a saved email"
+            file={flow.draft.evidence_ref ? { name: kept ?? 'The proof' } : null}
+            onPick={(f) => {
+              if (f) {
+                void pick(f);
+              } else {
+                flow.patch({ evidence_ref: null });
+                setKept(null);
+              }
+            }}
+            disabled={busy}
+            invalid={problem !== null}
+          />
           {busy ? <p className="gr-hint">Uploading…</p> : flow.draft.evidence_ref ? <p className="gr-hint">Proof kept.</p> : null}
         </div>
       )}

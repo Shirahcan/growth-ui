@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from 'react';
 import { useGrowth } from '../GrowthProvider';
+import { FilePicker } from '../ui/FilePicker';
 import { Button, ChoiceGroup, Field, INPUT, LoadError, Notice, Pill } from '../ui/primitives';
 import type { ImportFlow } from './useImportFlow';
 
@@ -42,7 +43,19 @@ function FileStep({ flow }: { flow: ImportFlow }) {
         <p className="gr-hint">Example: clients_2024.csv with the columns Email, Name, Type, Date.</p>
       </Lead>
       <Field label="CSV file" error={flow.fileError}>
-        {(id) => <input id={id} type="file" accept=".csv,text/csv" className={INPUT} onChange={(e) => e.target.files?.[0] && flow.loadFile(e.target.files[0])} />}
+        {(id) => (
+          <FilePicker
+            id={id}
+            accept=".csv,text/csv"
+            kinds="a CSV file"
+            file={flow.fileName ? { name: flow.fileName } : null}
+            onPick={(f) => {
+              if (f) void flow.loadFile(f);
+            }}
+            invalid={Boolean(flow.fileError)}
+            removable={false}
+          />
+        )}
       </Field>
       {flow.csv ? <Notice>{flow.fileName}: {flow.csv.rows.length.toLocaleString()} rows, columns {flow.csv.header.join(', ')}.</Notice> : null}
       <Field label="Name this list" hint="Campaigns can target it by this name. You can rename it later.">
@@ -107,12 +120,14 @@ function ColumnsStep({ flow }: { flow: ImportFlow }) {
 function ConsentStep({ flow, uploadProof }: { flow: ImportFlow } & ImportStepsOptions) {
   const { onError } = useGrowth();
   const [uploading, setUploading] = useState(false);
+  const [proofName, setProofName] = useState<string | null>(null);
 
   async function upload(file: File) {
     if (!uploadProof) return;
     setUploading(true);
     try {
       flow.setProofRef(await uploadProof(file));
+      setProofName(file.name);
     } catch (e) {
       onError(e);
     } finally {
@@ -140,7 +155,23 @@ function ConsentStep({ flow, uploadProof }: { flow: ImportFlow } & ImportStepsOp
       {flow.mode === 'express_written' ? (
         uploadProof ? (
           <Field label="Proof of their written yes" hint="A signed form or an export from the tool that collected it. Kept with the product, linked to this list.">
-            {(id) => <input id={id} type="file" className={INPUT} disabled={uploading} onChange={(e) => e.target.files?.[0] && upload(e.target.files[0])} />}
+            {(id) => (
+              <FilePicker
+                id={id}
+                accept=".pdf,.png,.jpg,.jpeg,.webp,.csv,.xlsx,.eml,.msg"
+                kinds="a PDF, a photo, a spreadsheet or a saved email"
+                file={flow.proofRef ? { name: proofName ?? 'The proof' } : null}
+                onPick={(f) => {
+                  if (f) {
+                    void upload(f);
+                  } else {
+                    flow.setProofRef(null);
+                    setProofName(null);
+                  }
+                }}
+                disabled={uploading}
+              />
+            )}
           </Field>
         ) : (
           <p className="gr-warning">This product does not take a proof upload yet, so a written-consent list cannot be imported here. Choose the first option instead.</p>
