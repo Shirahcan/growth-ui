@@ -65,3 +65,18 @@ export const CONSENT_METHODS: Array<{ value: ConsentMethod; label: string }> = [
   { value: 'email', label: 'An email from the client saying yes' },
   { value: 'recorded_call', label: 'A recorded call where they agreed' },
 ];
+
+/** A blog category as growth-service answers it (blog on growth-service S1, v0.37.0). `posts` arrives with S2a. */
+export interface BlogCategory {
+  id: number;
+  slug: string;
+  name: string;
+  description: string | null;
+  /** One of the product's audience keys (the host's `words.audiences`), or null for every reader. */
+  audience: string | null;
+  sort: number;
+  is_active: boolean;
+  /** How many posts use it (S2a); absent until the service counts them. */
+  posts?: number;
+  updated_at: string | null;
+}
