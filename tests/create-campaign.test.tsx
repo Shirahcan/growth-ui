@@ -59,7 +59,7 @@ describe('creating a newsletter', () => {
   it('draws an email template’s preview as the email itself, in a frame with no permissions', async () => {
     const request = vi.fn(async (_method: string, path: string) => {
       if (path === 'layouts?kind=email') return { data: { layouts } };
-      if (path.startsWith('layouts/portify-weekly')) return { data: { starter: { nodes: [], tree: null, html: '<img src="{{hero_image_url}}" alt="Hero"><p>Hi there, this week</p>' } } };
+      if (path.startsWith('layouts/portify-weekly')) return { data: { starter: { nodes: [], tree: null, html: '<html><head><style>@media (prefers-color-scheme: dark) { .email-card { background: #111 } }</style></head><body><img src="{{hero_image_url}}" alt="Hero"><p>Hi there, this week</p></body></html>' } } };
 
       throw new Error('no preview');
     });
@@ -71,6 +71,10 @@ describe('creating a newsletter', () => {
     // A picture the author has not chosen yet is a grey placeholder, never a broken image.
     expect(frame.getAttribute('srcdoc')).not.toContain('{{hero_image_url}}');
     expect(frame.getAttribute('srcdoc')).toContain('data:image/svg+xml');
+    // Light, whatever the viewer's system prefers: the shell's dark rules can never match, and the frame says light.
+    expect(frame.getAttribute('srcdoc')).not.toContain('prefers-color-scheme: dark');
+    expect(frame.getAttribute('srcdoc')).toContain('<meta name="color-scheme" content="light">');
+    expect(frame.style.colorScheme).toBe('light');
     expect(request.mock.calls.some((c) => c[0] === 'GET' && c[1] === 'layouts/draw-alert?starter=1')).toBe(true);
   });
 

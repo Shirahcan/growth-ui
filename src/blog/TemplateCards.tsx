@@ -71,7 +71,7 @@ export function TemplateCards({ templates, previews, value, onChange, renderPrev
               ) : preview && preview.html ? (
                 // An email template is html already: drawn in a frame with NO permissions (no scripts, no same origin),
                 // so a starter's markup can never run or reach the page; a picture, like every card.
-                <iframe title={`${t.name} preview`} sandbox="" srcDoc={withPicturePlaceholders(preview.html)} tabIndex={-1} className="gr-template-frame" style={{ width: PAGE_WIDTH, height: 1400, border: 0 }} />
+                <iframe title={`${t.name} preview`} sandbox="" srcDoc={inTheLightScheme(withPicturePlaceholders(preview.html))} tabIndex={-1} className="gr-template-frame" style={{ width: PAGE_WIDTH, height: 1400, border: 0, colorScheme: 'light' }} />
               ) : (
                 <Shape nodes={preview?.nodes ?? []} />
               )}
@@ -105,6 +105,22 @@ const PICTURE_PLACEHOLDER = `data:image/svg+xml,${encodeURIComponent(
  */
 function withPicturePlaceholders(html: string): string {
   return html.replace(/(<img\b[^>]*?\ssrc=)(["'])\{\{\s*[a-z0-9_]+\s*\}\}\2/gi, (_m, before: string, quote: string) => `${before}${quote}${PICTURE_PLACEHOLDER}${quote}`);
+}
+
+/** Any `(prefers-color-scheme: …)` feature, wherever it sits in a media query. */
+const SCHEME_FEATURE = /\(\s*prefers-color-scheme\s*:\s*(dark|light)\s*\)/gi;
+
+/**
+ * The email in its LIGHT scheme, whatever the viewer's system prefers. A frame's `prefers-color-scheme` follows the
+ * viewer's OS, so on a dark-mode laptop the template cards drew dark emails beside a light page (Loop 1, 2026-11-17).
+ * Every scheme feature becomes always (light) or never (dark) true, and the document declares light; the same rule as
+ * pml-ui's `forceColorScheme`, kept here because growth-ui does not depend on pml-ui.
+ */
+export function inTheLightScheme(html: string): string {
+  const forced = html.replace(SCHEME_FEATURE, (_m, scheme: string) => (scheme.toLowerCase() === 'light' ? '(min-width: 0px)' : '(max-width: 0px)'));
+  const declare = '<meta name="color-scheme" content="light"><style>:root{color-scheme:light}</style>';
+
+  return /<head[^>]*>/i.test(forced) ? forced.replace(/<head[^>]*>/i, (head) => head + declare) : declare + forced;
 }
 
 /** A page drawn at PAGE_WIDTH and scaled to the card's width; a picture, never something to press. */
