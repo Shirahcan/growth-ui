@@ -1,6 +1,7 @@
 import { useGrowth } from '../GrowthProvider';
 import { Button, Card, Field, INPUT, LoadError, Loading, Notice, Pill, Refusal } from '../ui/primitives';
 import { FactsField, ReaderQuestionsField } from './PostListFields';
+import { PostPublishBar } from './PostPublishBar';
 import type { BlogCtaKind, BlogPageWidth, BlogPostDetail } from './types';
 import { usePostFields } from './usePostFields';
 
@@ -57,6 +58,7 @@ export function PostSettings({ uuid, ctaWords, serviceRefHint }: PostSettingsPro
             <h2 className="gr-section-title">Post details</h2>
             <span className="gr-hint" role="status">{f.saving ? 'Saving…' : f.dirty ? 'Unsaved changes' : 'Saved'}</span>
           </div>
+          <PostPublishBar post={post} flush={f.flush} onPost={f.adopt} />
 
           {f.conflict ? (
             <Notice>

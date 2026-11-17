@@ -208,6 +208,12 @@ export function usePostFields(uuid: string) {
     void persist(latest.current);
   }, [conflict, persist, uuid]);
 
+  /** Take the post as another action returned it (a publish): its fields version too, so the next save is not a false conflict. */
+  const adopt = useCallback((p: BlogPostDetail) => {
+    versions.current.set(p.uuid, p.fields_version);
+    setPost(p);
+  }, []);
+
   /** "Load the latest": drop this copy and show what was saved. Nothing waiting is sent. */
   const loadLatest = useCallback(() => {
     if (timer.current) clearTimeout(timer.current);
@@ -239,5 +245,5 @@ export function usePostFields(uuid: string) {
     return () => window.removeEventListener('beforeunload', warn);
   }, [dirty]);
 
-  return { post, setPost, categories, draft, set, flush, saving, dirty, conflict, keepMine, loadLatest, refused, loadError, reload: loadLatest };
+  return { post, adopt, categories, draft, set, flush, saving, dirty, conflict, keepMine, loadLatest, refused, loadError, reload: loadLatest };
 }
