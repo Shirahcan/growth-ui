@@ -79,7 +79,7 @@ export type { StoryStep, StoryStepsOptions } from './blog/StorySteps';
 export { useStoryFlow, EMPTY_STORY, consentAt, localToday } from './blog/useStoryFlow';
 export type { StoryDraft, StoryFlow } from './blog/useStoryFlow';
 export { createPostSteps } from './blog/CreatePostSteps';
-export type { CreatePostStep } from './blog/CreatePostSteps';
+export type { CreatePostStep, CreatePostStepsOptions } from './blog/CreatePostSteps';
 export { useCreatePostFlow } from './blog/useCreatePostFlow';
 export type { CreatePostDraft, CreatePostFlow, CreatePostFlowOptions, PostTemplate } from './blog/useCreatePostFlow';
 export { CTA_ACTIONS, CTA_STAGES, CTA_VARIANTS, CONSENT_METHODS } from './blog/types';

@@ -12,14 +12,22 @@ export interface PostTemplate {
   parts: number;
 }
 
-/** What the create flow decides. Kept as the host wizard's draft, so an interrupted pick is resumed. */
+/** What the create flow decides. Kept as the host wizard's draft, so an interrupted pick is resumed (files are not). */
 export interface CreatePostDraft {
   layout_key: string | null;
+  /** "document": the assistant prepares the post from a file; "template": it opens with the template's guidance. */
+  start: 'document' | 'template';
 }
 
 export interface CreatePostFlow {
   draft: CreatePostDraft;
   patch: (p: Partial<CreatePostDraft>) => void;
+  /** The post's source document, while "start" is "document" (a File never goes into the saved draft). */
+  document: File | null;
+  setDocument: (file: File | null) => void;
+  /** An optional cover photo. */
+  cover: File | null;
+  setCover: (file: File | null) => void;
   /** null while loading. */
   templates: PostTemplate[] | null;
   loadError: string | null;
@@ -42,7 +50,9 @@ export interface CreatePostFlowOptions {
  */
 export function useCreatePostFlow(options: CreatePostFlowOptions = {}): CreatePostFlow {
   const { request, onError } = useGrowth();
-  const [draft, setDraft] = useState<CreatePostDraft>({ layout_key: null });
+  const [draft, setDraft] = useState<CreatePostDraft>({ layout_key: null, start: 'template' });
+  const [document, setDocument] = useState<File | null>(null);
+  const [cover, setCover] = useState<File | null>(null);
   const [templates, setTemplates] = useState<PostTemplate[] | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
@@ -95,5 +105,5 @@ export function useCreatePostFlow(options: CreatePostFlowOptions = {}): CreatePo
     }
   }, [request, onError, draft.layout_key]);
 
-  return { draft, patch, templates, loadError, reload: () => setReloadKey((k) => k + 1), creating, refusal, create };
+  return { draft, patch, document, setDocument, cover, setCover, templates, loadError, reload: () => setReloadKey((k) => k + 1), creating, refusal, create };
 }

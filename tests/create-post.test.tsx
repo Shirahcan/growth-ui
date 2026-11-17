@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { GrowthProvider, createPostSteps, useCreatePostFlow, type CreatePostFlow } from '../src';
+import { GrowthProvider, createPostSteps, useCreatePostFlow, type CreatePostFlow, type CreatePostStepsOptions } from '../src';
 
 const hrefFor = (tab: string) => `/admin/growth/${tab}`;
 const layouts = [
@@ -9,19 +9,19 @@ const layouts = [
 ];
 
 /** A host wizard in miniature: draws the steps and keeps the flow for the test to drive. */
-function Host({ onFlow, defaultTemplate }: { onFlow: (f: CreatePostFlow) => void; defaultTemplate?: string }) {
+function Host({ onFlow, defaultTemplate, options, at = 0 }: { onFlow: (f: CreatePostFlow) => void; defaultTemplate?: string; options?: CreatePostStepsOptions; at?: number }) {
   const flow = useCreatePostFlow({ defaultTemplate });
   onFlow(flow);
-  const step = createPostSteps(flow)[0]!;
+  const step = createPostSteps(flow, options)[at]!;
 
   return <div>{step.render()}<p data-testid="valid">{step.validate() ?? 'ok'}</p></div>;
 }
 
-function mount(request: ReturnType<typeof vi.fn>, defaultTemplate?: string) {
+function mount(request: ReturnType<typeof vi.fn>, defaultTemplate?: string, options?: CreatePostStepsOptions, at = 0) {
   let flow: CreatePostFlow | null = null;
   render(
     <GrowthProvider product="portify" request={request as never} hrefFor={hrefFor as never} onError={vi.fn()} onNotice={vi.fn()} words={{ audiences: {}, product: 'Portify' }}>
-      <Host onFlow={(f) => { flow = f; }} defaultTemplate={defaultTemplate} />
+      <Host onFlow={(f) => { flow = f; }} defaultTemplate={defaultTemplate} options={options} at={at} />
     </GrowthProvider>,
   );
 
@@ -51,6 +51,34 @@ describe('creating a post', () => {
 
     expect(request).toHaveBeenLastCalledWith('POST', 'blog/posts', { layout_key: 'news' });
     expect(created).toMatchObject({ uuid: 'new-1', layout_key: 'news' });
+  });
+
+  it('offers starting from a document with an optional cover, and asks for the document only when that is the choice', async () => {
+    const documents = { accept: '.pdf,.docx,.txt,.md', maxMb: 5, assistant: 'Porter' };
+    const flow = mount(vi.fn(async () => ({ data: { layouts } })), 'full-guide', { documents }, 1);
+
+    expect(screen.getByRole('radio', { name: 'Start with the template’s guidance' }).getAttribute('aria-checked')).toBe('true');
+    expect(screen.getByTestId('valid').textContent).toBe('ok');
+
+    fireEvent.click(screen.getByRole('radio', { name: 'Start from a document' }));
+    expect(await screen.findByText(/Porter reads it and fills every part/)).toBeTruthy();
+    expect(screen.getByLabelText('A cover photo (optional)')).toBeTruthy();
+    expect(screen.getByTestId('valid').textContent).toBe('Choose the document, or start with the template’s guidance.');
+
+    act(() => flow().setDocument(new File(['words'], 'guide.md', { type: 'text/markdown' })));
+    await waitFor(() => expect(screen.getByTestId('valid').textContent).toBe('ok'));
+    expect(screen.getByText('guide.md')).toBeTruthy();
+  });
+
+  it('without a host that reads documents there is no second step', () => {
+    let steps = 0;
+    function Count() {
+      steps = createPostSteps(useCreatePostFlow()).length;
+
+      return null;
+    }
+    render(<GrowthProvider product="portify" request={vi.fn(async () => ({ data: { layouts } })) as never} hrefFor={hrefFor as never} onError={vi.fn()} onNotice={vi.fn()} words={{ audiences: {}, product: 'Portify' }}><Count /></GrowthProvider>);
+    expect(steps).toBe(1);
   });
 
   it('says plainly when the blog has no post templates, and the step cannot go on', async () => {
