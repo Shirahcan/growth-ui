@@ -120,10 +120,9 @@ export function useCreateCampaignFlow(options: CreateCampaignFlowOptions = {}): 
     };
   }, [request, templates]);
 
-  // From a document the assistant drafts the subject (the prepare writes it, so a typed one would be overwritten): the
-  // draft is named after the document until then, and the person changes it in the designer.
-  const fromDocument = draft.start === 'document' && document !== null;
-  const subject = fromDocument ? `Draft from ${document.name}`.slice(0, 255) : draft.subject.trim();
+  // The person's subject, always: the assistant keeps a team's own subject when it prepares from a document (it only
+  // writes an empty one), so a placeholder here would block it and a typed one is never overwritten (0.24.1).
+  const subject = draft.subject.trim();
 
   const create = useCallback(async (): Promise<CreatedCampaign | null> => {
     if (!draft.layout_key || subject === '') return null;

@@ -160,7 +160,7 @@ describe('creating a newsletter from a document', () => {
     expect(screen.getByTestId('valid').textContent).toBe('ok');
   });
 
-  it('with a document, the subject step explains instead of asking, and the draft is named after the document', async () => {
+  it('with a document, the subject is still the person’s own: the assistant keeps it (it only writes an empty one)', async () => {
     const request = service();
     const flow = mount(request, 3, 'portify-weekly', vi.fn(), { documents });
     await waitFor(() => expect(flow().draft.layout_key).toBe('portify-weekly'));
@@ -169,14 +169,16 @@ describe('creating a newsletter from a document', () => {
       flow().setDocument(notes());
     });
 
-    expect(await screen.findByText(/Porter writes the subject line and the preview text from draw-notes\.md/)).toBeTruthy();
-    expect(screen.queryByLabelText('Subject')).toBeNull();
+    expect(await screen.findByText(/Porter keeps your subject as you write it, and writes the preview text from draw-notes\.md/)).toBeTruthy();
+    expect(screen.getByTestId('valid').textContent).toBe('Write a subject line.');
+    fireEvent.change(screen.getByLabelText('Subject'), { target: { value: 'This week: 2,500 invitations' } });
     expect(screen.getByTestId('valid').textContent).toBe('ok');
 
     await act(async () => {
       await flow().create();
     });
-    expect(request).toHaveBeenCalledWith('POST', 'campaigns', { kind: 'regular', subject: 'Draft from draw-notes.md', layout_key: 'portify-weekly' });
+    // Never a placeholder named after the file: that is a subject the assistant would keep.
+    expect(request).toHaveBeenCalledWith('POST', 'campaigns', { kind: 'regular', subject: 'This week: 2,500 invitations', layout_key: 'portify-weekly' });
   });
 
   it('switching back to the template keeps the subject the person must write', async () => {

@@ -33,8 +33,8 @@ function StartStep({ flow, documents }: { flow: CreateCampaignFlow; documents: N
       <p className="gr-row-title">Do you have it written somewhere already?</p>
       <p className="gr-hint">
         Your notes, a draft, an announcement: with a document, the designer opens with {documents.assistant}&rsquo;s console, where{' '}
-        {documents.assistant} reads it and fills every part of the template with its words, plus the subject line and the preview text, and
-        the current figures it keeps. Anything the document does not say is marked for a person to check. Nothing is sent until you press Send.
+        {documents.assistant} reads it and fills every part of the template with its words, plus the preview text and the current figures it
+        keeps. Anything the document does not say is marked for a person to check. Nothing is sent until you press Send.
       </p>
       <ChoiceGroup<'document' | 'template'>
         label="How to start"
@@ -102,21 +102,8 @@ function TemplateStep({ flow }: { flow: CreateCampaignFlow }) {
 }
 
 function SubjectStep({ flow, assistant }: { flow: CreateCampaignFlow; assistant: string }) {
-  // From a document the assistant writes the subject (the prepare would overwrite a typed one), so nothing is asked here.
-  if (flow.draft.start === 'document' && flow.document) {
-    return (
-      <div className="gr-stack">
-        <p className="gr-row-title">The subject line</p>
-        <p className="gr-hint">
-          {assistant} writes the subject line and the preview text from {flow.document.name}, with the rest. Until then the draft is called
-          &ldquo;Draft from {flow.document.name}&rdquo; in your list. You change either in the designer, before anything is sent.
-        </p>
-        <Refusal message={flow.refusal} />
-      </div>
-    );
-  }
-
   const length = flow.draft.subject.trim().length;
+  const fromDocument = flow.draft.start === 'document' && flow.document !== null;
   const over = length > SUBJECT_GUIDE;
 
   return (
@@ -126,6 +113,11 @@ function SubjectStep({ flow, assistant }: { flow: CreateCampaignFlow; assistant:
         It is what people see in their inbox before they open it, and it names the draft in your list. Example: Express Entry draw: 2,500
         invitations at CRS 520. You can change it in the designer until it goes out. Nothing is sent from here.
       </p>
+      {fromDocument && flow.document ? (
+        <p className="gr-hint">
+          {assistant} keeps your subject as you write it, and writes the preview text from {flow.document.name} with the rest.
+        </p>
+      ) : null}
       <Field
         label="Subject"
         hint={`${length} of ${SUBJECT_GUIDE} characters${over ? ': most inboxes cut off the rest, so lead with what matters.' : '.'}`}
@@ -139,7 +131,6 @@ function SubjectStep({ flow, assistant }: { flow: CreateCampaignFlow; assistant:
 
 export function createCampaignSteps(flow: CreateCampaignFlow, options: CreateCampaignStepsOptions = {}): CreateCampaignStep[] {
   const { documents } = options;
-  const fromDocument = () => documents !== undefined && flow.draft.start === 'document' && flow.document !== null;
   const steps: CreateCampaignStep[] = [
     { id: 'kind', title: 'What you are sending', validate: () => null, render: () => <KindStep flow={flow} /> },
     {
@@ -169,7 +160,7 @@ export function createCampaignSteps(flow: CreateCampaignFlow, options: CreateCam
   steps.push({
     id: 'subject',
     title: 'The subject line',
-    validate: () => (!fromDocument() && flow.draft.subject.trim() === '' ? 'Write a subject line.' : null),
+    validate: () => (flow.draft.subject.trim() === '' ? 'Write a subject line.' : null),
     render: () => <SubjectStep flow={flow} assistant={documents?.assistant ?? 'The assistant'} />,
   });
 
