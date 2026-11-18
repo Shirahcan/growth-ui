@@ -268,8 +268,8 @@ a.gr-button { text-decoration: none; }
 .gr-table tbody tr:last-child td { border-bottom: 0; }
 .gr-table tbody tr:hover td { background: var(--gr-surface-muted, #f8fafc); }
 .gr-table-main { min-width: 16rem; }
-.gr-table-link { font-weight: 700; color: var(--gr-ink, #0f172a); text-decoration: none; outline: none; }
-.gr-table-link:hover { color: var(--gr-accent, #4361ee); }
+.gr-table-link { font-weight: 700; color: var(--gr-accent, #4361ee); text-decoration: none; outline: none; }
+.gr-table-link:hover { text-decoration: underline; }
 .gr-table-link:focus-visible { border-radius: 0.25rem; box-shadow: 0 0 0 2px var(--gr-accent, #4361ee); }
 .gr-table-sub { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 0.25rem; font-size: 0.75rem; color: var(--gr-ink-muted, #64748b); }
 .gr-table-main .gr-hint { margin: 0.25rem 0 0; }

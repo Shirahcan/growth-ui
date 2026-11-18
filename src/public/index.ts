@@ -9,6 +9,8 @@ export type { PublicBlogListProps } from './PublicBlogList';
 export { PublicPostArticle } from './PublicPostArticle';
 export type { PublicPostArticleProps, PublicPostColumn, PublicPostPart } from './PublicPostArticle';
 export { blogDate, blogDateLine, blogPageHref, blogPageParam } from './dates';
+export { postHead, postJsonLd } from './postHead';
+export type { PostHead, PostHeadSite, PostHeadSource } from './postHead';
 export { DEFAULT_PUBLIC_PATHS, DEFAULT_PUBLIC_WORDS, categoryPath, postPath } from './types';
 export type {
   BlogListMeta,

@@ -67,6 +67,8 @@ export type { CtaDraft } from './blog/CtaEditor';
 export { StoryBank } from './blog/StoryBank';
 export { BlogCategories, categoryBodyFrom, categoryDraftFrom, slugFrom } from './blog/BlogCategories';
 export { BlogPosts, postDate, postStatus, postTemplate, postsPath } from './blog/BlogPosts';
+// The search panel's general pieces (2026-11-18): context-free, for any SEO panel (a site page's too).
+export { LengthMeter, MeteredField, SearchResultPreview, SettingSwitch, SharePreviewCard } from './blog/seo/SeoPieces';
 export type { BlogPostsProps } from './blog/BlogPosts';
 export { PostSettings, PostReadiness } from './blog/PostSettings';
 export type { PostSettingsProps } from './blog/PostSettings';
