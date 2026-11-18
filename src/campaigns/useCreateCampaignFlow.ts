@@ -18,6 +18,11 @@ export interface CreateCampaignDraft {
   kind: 'regular' | 'alert';
   layout_key: string | null;
   subject: string;
+  /**
+   * "document": the assistant prepares the newsletter from a file in the designer's console (0.24.0, N1h-5); "template":
+   * it opens with the template's guidance. A draft saved before 0.24.0 has none, which reads as "template".
+   */
+  start?: 'document' | 'template';
 }
 
 /** A campaign as the service answers its creation: the list's shape plus how it is written. */
@@ -26,6 +31,9 @@ export type CreatedCampaign = Campaign & { body_format?: string; layout_key?: st
 export interface CreateCampaignFlow {
   draft: CreateCampaignDraft;
   patch: (p: Partial<CreateCampaignDraft>) => void;
+  /** The newsletter's source document, while "start" is "document" (a File never goes into the saved draft). */
+  document: File | null;
+  setDocument: (file: File | null) => void;
   /** null while loading. */
   templates: CampaignTemplate[] | null;
   /** Each template's preview by key: undefined while loading, null when it could not be drawn (the card shows its shape). */
@@ -55,7 +63,8 @@ export const SUBJECT_GUIDE = 45;
  */
 export function useCreateCampaignFlow(options: CreateCampaignFlowOptions = {}): CreateCampaignFlow {
   const { request, onError } = useGrowth();
-  const [draft, setDraft] = useState<CreateCampaignDraft>({ kind: 'regular', layout_key: null, subject: '' });
+  const [draft, setDraft] = useState<CreateCampaignDraft>({ kind: 'regular', layout_key: null, subject: '', start: 'template' });
+  const [document, setDocument] = useState<File | null>(null);
   const [templates, setTemplates] = useState<CampaignTemplate[] | null>(null);
   const [previews, setPreviews] = useState<Record<string, TemplatePreview | null>>({});
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -111,14 +120,19 @@ export function useCreateCampaignFlow(options: CreateCampaignFlowOptions = {}): 
     };
   }, [request, templates]);
 
+  // From a document the assistant drafts the subject (the prepare writes it, so a typed one would be overwritten): the
+  // draft is named after the document until then, and the person changes it in the designer.
+  const fromDocument = draft.start === 'document' && document !== null;
+  const subject = fromDocument ? `Draft from ${document.name}`.slice(0, 255) : draft.subject.trim();
+
   const create = useCallback(async (): Promise<CreatedCampaign | null> => {
-    if (!draft.layout_key || draft.subject.trim() === '') return null;
+    if (!draft.layout_key || subject === '') return null;
     setCreating(true);
     setRefusal(null);
     try {
       const res = await request<Envelope<{ campaign: CreatedCampaign }>>('POST', 'campaigns', {
         kind: draft.kind,
-        subject: draft.subject.trim(),
+        subject,
         layout_key: draft.layout_key,
       });
 
@@ -132,7 +146,7 @@ export function useCreateCampaignFlow(options: CreateCampaignFlowOptions = {}): 
     } finally {
       setCreating(false);
     }
-  }, [request, onError, draft.kind, draft.subject, draft.layout_key]);
+  }, [request, onError, draft.kind, subject, draft.layout_key]);
 
-  return { draft, patch, templates, previews, loadError, reload: () => setReloadKey((k) => k + 1), creating, refusal, create };
+  return { draft, patch, document, setDocument, templates, previews, loadError, reload: () => setReloadKey((k) => k + 1), creating, refusal, create };
 }

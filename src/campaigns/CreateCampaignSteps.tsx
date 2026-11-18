@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { FilePick } from '../blog/CreatePostSteps';
 import { TemplateCards } from '../blog/TemplateCards';
 import { ChoiceGroup, Field, INPUT, LoadError, Loading, Notice, Refusal } from '../ui/primitives';
 import { SUBJECT_GUIDE, type CreateCampaignFlow } from './useCreateCampaignFlow';
@@ -10,10 +11,53 @@ import { SUBJECT_GUIDE, type CreateCampaignFlow } from './useCreateCampaignFlow'
  * goes and the send itself are the designer's panels.
  */
 export interface CreateCampaignStep {
-  id: 'kind' | 'template' | 'subject';
+  id: 'kind' | 'template' | 'start' | 'subject';
   title: string;
   validate: () => string | null;
   render: () => ReactNode;
+}
+
+export interface CreateCampaignStepsOptions {
+  /**
+   * Offer "Start from a document" (0.24.0, N1h-5): the file kinds the host reads, its upload limit in MB and the
+   * assistant's name. The host stores the file and hands it to the designer's console, which prepares the newsletter
+   * inside its template (owner 2026-11-17: "When a doc/file is uploaded, the Porter console itself should be used!").
+   * Absent: no such step.
+   */
+  documents?: { accept: string; maxMb: number; assistant: string };
+}
+
+function StartStep({ flow, documents }: { flow: CreateCampaignFlow; documents: NonNullable<CreateCampaignStepsOptions['documents']> }) {
+  return (
+    <div className="gr-stack">
+      <p className="gr-row-title">Do you have it written somewhere already?</p>
+      <p className="gr-hint">
+        Your notes, a draft, an announcement: with a document, the designer opens with {documents.assistant}&rsquo;s console, where{' '}
+        {documents.assistant} reads it and fills every part of the template with its words, plus the subject line and the preview text, and
+        the current figures it keeps. Anything the document does not say is marked for a person to check. Nothing is sent until you press Send.
+      </p>
+      <ChoiceGroup<'document' | 'template'>
+        label="How to start"
+        value={flow.draft.start ?? 'template'}
+        options={[
+          { value: 'document', label: 'Start from a document' },
+          { value: 'template', label: 'Start with the template’s guidance' },
+        ]}
+        onChange={(start) => flow.patch({ start })}
+      />
+      {flow.draft.start === 'document' ? (
+        <FilePick
+          label="The document"
+          hint={`A PDF, a Word document, or a text or Markdown file, up to ${documents.maxMb} MB.`}
+          kinds="a PDF, a Word document, or a text or Markdown file"
+          accept={documents.accept}
+          file={flow.document}
+          onPick={flow.setDocument}
+          maxMb={documents.maxMb}
+        />
+      ) : null}
+    </div>
+  );
 }
 
 function KindStep({ flow }: { flow: CreateCampaignFlow }) {
@@ -57,7 +101,21 @@ function TemplateStep({ flow }: { flow: CreateCampaignFlow }) {
   );
 }
 
-function SubjectStep({ flow }: { flow: CreateCampaignFlow }) {
+function SubjectStep({ flow, assistant }: { flow: CreateCampaignFlow; assistant: string }) {
+  // From a document the assistant writes the subject (the prepare would overwrite a typed one), so nothing is asked here.
+  if (flow.draft.start === 'document' && flow.document) {
+    return (
+      <div className="gr-stack">
+        <p className="gr-row-title">The subject line</p>
+        <p className="gr-hint">
+          {assistant} writes the subject line and the preview text from {flow.document.name}, with the rest. Until then the draft is called
+          &ldquo;Draft from {flow.document.name}&rdquo; in your list. You change either in the designer, before anything is sent.
+        </p>
+        <Refusal message={flow.refusal} />
+      </div>
+    );
+  }
+
   const length = flow.draft.subject.trim().length;
   const over = length > SUBJECT_GUIDE;
 
@@ -79,8 +137,10 @@ function SubjectStep({ flow }: { flow: CreateCampaignFlow }) {
   );
 }
 
-export function createCampaignSteps(flow: CreateCampaignFlow): CreateCampaignStep[] {
-  return [
+export function createCampaignSteps(flow: CreateCampaignFlow, options: CreateCampaignStepsOptions = {}): CreateCampaignStep[] {
+  const { documents } = options;
+  const fromDocument = () => documents !== undefined && flow.draft.start === 'document' && flow.document !== null;
+  const steps: CreateCampaignStep[] = [
     { id: 'kind', title: 'What you are sending', validate: () => null, render: () => <KindStep flow={flow} /> },
     {
       id: 'template',
@@ -88,11 +148,30 @@ export function createCampaignSteps(flow: CreateCampaignFlow): CreateCampaignSte
       validate: () => (flow.draft.layout_key ? null : 'Pick a template to start from.'),
       render: () => <TemplateStep flow={flow} />,
     },
-    {
-      id: 'subject',
-      title: 'The subject line',
-      validate: () => (flow.draft.subject.trim() === '' ? 'Write a subject line.' : null),
-      render: () => <SubjectStep flow={flow} />,
-    },
   ];
+
+  if (documents) {
+    const tooBig = (f: File | null) => f !== null && f.size > documents.maxMb * 1024 * 1024;
+    steps.push({
+      id: 'start',
+      title: 'How to start',
+      validate: () => {
+        if (flow.draft.start !== 'document') return null;
+        if (!flow.document) return 'Choose the document, or start with the template’s guidance.';
+        if (tooBig(flow.document)) return `The file is larger than ${documents.maxMb} MB.`;
+
+        return null;
+      },
+      render: () => <StartStep flow={flow} documents={documents} />,
+    });
+  }
+
+  steps.push({
+    id: 'subject',
+    title: 'The subject line',
+    validate: () => (!fromDocument() && flow.draft.subject.trim() === '' ? 'Write a subject line.' : null),
+    render: () => <SubjectStep flow={flow} assistant={documents?.assistant ?? 'The assistant'} />,
+  });
+
+  return steps;
 }

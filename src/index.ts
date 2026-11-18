@@ -82,7 +82,7 @@ export { TemplateCards } from './blog/TemplateCards';
 export type { TemplateCardsProps } from './blog/TemplateCards';
 export type { TemplatePreview } from './blog/useCreatePostFlow';
 export { createCampaignSteps } from './campaigns/CreateCampaignSteps';
-export type { CreateCampaignStep } from './campaigns/CreateCampaignSteps';
+export type { CreateCampaignStep, CreateCampaignStepsOptions } from './campaigns/CreateCampaignSteps';
 export { useCreateCampaignFlow, SUBJECT_GUIDE } from './campaigns/useCreateCampaignFlow';
 export type { CampaignTemplate, CreateCampaignDraft, CreateCampaignFlow, CreateCampaignFlowOptions, CreatedCampaign } from './campaigns/useCreateCampaignFlow';
 export { createPostSteps } from './blog/CreatePostSteps';

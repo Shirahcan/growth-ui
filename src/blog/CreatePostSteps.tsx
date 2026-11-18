@@ -56,7 +56,8 @@ function TemplateStep({ flow, renderPreview }: { flow: CreatePostFlow; renderPre
   );
 }
 
-function FilePick({ label, hint, kinds, accept, file, onPick, maxMb }: { label: string; hint: string; kinds: string; accept: string; file: File | null; onPick: (f: File | null) => void; maxMb: number }) {
+/** A file field with the upload limit said beside it (shared with a newsletter's start step, 0.24.0). */
+export function FilePick({ label, hint, kinds, accept, file, onPick, maxMb }: { label: string; hint: string; kinds: string; accept: string; file: File | null; onPick: (f: File | null) => void; maxMb: number }) {
   const tooBig = file !== null && file.size > maxMb * 1024 * 1024;
 
   return (

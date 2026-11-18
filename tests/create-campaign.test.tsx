@@ -1,6 +1,6 @@
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { GrowthProvider, createCampaignSteps, useCreateCampaignFlow, type CreateCampaignFlow } from '../src';
+import { GrowthProvider, createCampaignSteps, useCreateCampaignFlow, type CreateCampaignFlow, type CreateCampaignStepsOptions } from '../src';
 
 const hrefFor = (tab: string) => `/admin/growth/${tab}`;
 const layouts = [
@@ -9,19 +9,19 @@ const layouts = [
 ];
 
 /** A host wizard in miniature: draws one step and keeps the flow for the test to drive. */
-function Host({ onFlow, defaultTemplate, at }: { onFlow: (f: CreateCampaignFlow) => void; defaultTemplate?: string; at: number }) {
+function Host({ onFlow, defaultTemplate, at, options }: { onFlow: (f: CreateCampaignFlow) => void; defaultTemplate?: string; at: number; options?: CreateCampaignStepsOptions }) {
   const flow = useCreateCampaignFlow({ defaultTemplate });
   onFlow(flow);
-  const step = createCampaignSteps(flow)[at]!;
+  const step = createCampaignSteps(flow, options)[at]!;
 
   return <div>{step.render()}<p data-testid="valid">{step.validate() ?? 'ok'}</p></div>;
 }
 
-function mount(request: ReturnType<typeof vi.fn>, at: number, defaultTemplate?: string, onError = vi.fn()) {
+function mount(request: ReturnType<typeof vi.fn>, at: number, defaultTemplate?: string, onError = vi.fn(), options?: CreateCampaignStepsOptions) {
   let flow: CreateCampaignFlow | null = null;
   render(
     <GrowthProvider product="portify" request={request as never} hrefFor={hrefFor as never} onError={onError} onNotice={vi.fn()} words={{ audiences: {}, product: 'Portify' }}>
-      <Host onFlow={(f) => { flow = f; }} defaultTemplate={defaultTemplate} at={at} />
+      <Host onFlow={(f) => { flow = f; }} defaultTemplate={defaultTemplate} at={at} options={options} />
     </GrowthProvider>,
   );
 
@@ -118,5 +118,76 @@ describe('creating a newsletter', () => {
     expect(created).toBeNull();
     expect(screen.getByText('That template is switched off.')).toBeTruthy();
     expect(onError).not.toHaveBeenCalled();
+  });
+});
+
+/** Starting from a document (0.24.0, N1h-5): the designer's console prepares it; the subject is the assistant's to draft. */
+describe('creating a newsletter from a document', () => {
+  const documents = { accept: '.pdf,.docx,.txt,.md', maxMb: 5, assistant: 'Porter' };
+  const notes = () => new File(['Draw on Tuesday: 2,500 invitations.'], 'draw-notes.md', { type: 'text/markdown' });
+
+  it('offers no start step unless the host reads documents, so the steps are as before', () => {
+    let flow: CreateCampaignFlow | null = null;
+    function Count() {
+      const f = useCreateCampaignFlow();
+      flow = f;
+
+      return <p data-testid="count">{createCampaignSteps(f).map((s) => s.id).join(',')}|{createCampaignSteps(f, { documents }).map((s) => s.id).join(',')}</p>;
+    }
+    render(
+      <GrowthProvider product="portify" request={service() as never} hrefFor={hrefFor as never} onError={vi.fn()} onNotice={vi.fn()} words={{ audiences: {}, product: 'Portify' }}>
+        <Count />
+      </GrowthProvider>,
+    );
+
+    expect(screen.getByTestId('count').textContent).toBe('kind,template,subject|kind,template,start,subject');
+    expect(flow).not.toBeNull();
+  });
+
+  it('asks for the document only when starting from one, and refuses a file over the limit', async () => {
+    const flow = mount(service(), 2, 'portify-weekly', vi.fn(), { documents });
+
+    expect(screen.getByTestId('valid').textContent).toBe('ok');
+    fireEvent.click(screen.getByRole('radio', { name: 'Start from a document' }));
+    expect(screen.getByTestId('valid').textContent).toBe('Choose the document, or start with the template’s guidance.');
+
+    const big = new File(['x'], 'huge.pdf', { type: 'application/pdf' });
+    Object.defineProperty(big, 'size', { value: 6 * 1024 * 1024 });
+    act(() => flow().setDocument(big));
+    expect(screen.getByTestId('valid').textContent).toBe('The file is larger than 5 MB.');
+
+    act(() => flow().setDocument(notes()));
+    expect(screen.getByTestId('valid').textContent).toBe('ok');
+  });
+
+  it('with a document, the subject step explains instead of asking, and the draft is named after the document', async () => {
+    const request = service();
+    const flow = mount(request, 3, 'portify-weekly', vi.fn(), { documents });
+    await waitFor(() => expect(flow().draft.layout_key).toBe('portify-weekly'));
+    act(() => {
+      flow().patch({ start: 'document' });
+      flow().setDocument(notes());
+    });
+
+    expect(await screen.findByText(/Porter writes the subject line and the preview text from draw-notes\.md/)).toBeTruthy();
+    expect(screen.queryByLabelText('Subject')).toBeNull();
+    expect(screen.getByTestId('valid').textContent).toBe('ok');
+
+    await act(async () => {
+      await flow().create();
+    });
+    expect(request).toHaveBeenCalledWith('POST', 'campaigns', { kind: 'regular', subject: 'Draft from draw-notes.md', layout_key: 'portify-weekly' });
+  });
+
+  it('switching back to the template keeps the subject the person must write', async () => {
+    const flow = mount(service(), 3, 'portify-weekly', vi.fn(), { documents });
+    act(() => {
+      flow().patch({ start: 'document' });
+      flow().setDocument(notes());
+    });
+    act(() => flow().patch({ start: 'template' }));
+
+    expect(await screen.findByLabelText('Subject')).toBeTruthy();
+    expect(screen.getByTestId('valid').textContent).toBe('Write a subject line.');
   });
 });
