@@ -37,6 +37,7 @@ export function MeteredField({
   disabled,
   error,
   hint,
+  name,
 }: {
   label: string;
   value: string;
@@ -49,10 +50,13 @@ export function MeteredField({
   disabled?: boolean;
   error?: string | null;
   hint?: ReactNode;
+  /** The field's name, so a browser's autofill and form tools can tell the boxes apart. */
+  name?: string;
 }) {
   const id = useId();
   const common = {
     id,
+    name,
     className: 'gr-input',
     value,
     disabled,

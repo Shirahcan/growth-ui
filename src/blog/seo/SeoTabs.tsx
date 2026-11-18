@@ -41,6 +41,7 @@ export function SeoAdvancedTab({ access }: { access: SeoFieldsAccess }) {
       </section>
 
       <MeteredField
+        name="canonical_url"
         label="Canonical address"
         value={canonical}
         onChange={(v) => {
@@ -114,6 +115,7 @@ export function SeoSocialTab({ access, preview, site, fallbackImage }: { access:
         Facebook, LinkedIn and X use the search title, the search description and the cover picture, unless you change the words here.
       </p>
       <MeteredField
+        name="social_title"
         label="Title when shared"
         value={title}
         onChange={setTitle}
@@ -122,6 +124,7 @@ export function SeoSocialTab({ access, preview, site, fallbackImage }: { access:
         placeholder={head.title}
       />
       <MeteredField
+        name="social_description"
         label="Description when shared"
         value={description}
         onChange={setDescription}

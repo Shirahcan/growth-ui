@@ -275,13 +275,13 @@ export function PostSeoPanel({ uuid, refreshKey, onJump, onSaved, site, shareIma
             <details open style={{ border: '1px solid #E4E4EF', borderRadius: 8 }}>
               <summary style={{ padding: '10px 12px', cursor: 'pointer', fontWeight: 700, fontSize: 13 }}>Edit snippet</summary>
               <div className="gr-stack" style={{ padding: '0 12px 12px' }}>
-                <MeteredField label="Search title" value={value('meta_title')} onChange={edit('meta_title')} onCommit={commit('meta_title')} max={limits?.title_max} disabled={!canEdit || !fields} error={errors.meta_title} placeholder={String(fields?.values.title ?? '')} hint="Empty uses the post's title. The site's name is added after it." />
+                <MeteredField name="meta_title" label="Search title" value={value('meta_title')} onChange={edit('meta_title')} onCommit={commit('meta_title')} max={limits?.title_max} disabled={!canEdit || !fields} error={errors.meta_title} placeholder={String(fields?.values.title ?? '')} hint="Empty uses the post's title. The site's name is added after it." />
                 <div className="gr-stack" style={{ gap: 4 }}>
                   <span className="gr-row-title" style={{ fontSize: 13 }}>Address</span>
                   <code style={{ fontSize: 12, overflowWrap: 'anywhere' }}>{String(fields?.values.slug ?? '')}</code>
                   <p className="gr-hint" style={{ margin: 0 }}>Follows the title until the post is first published, then never changes, so shared links keep working.</p>
                 </div>
-                <MeteredField label="Search description" value={value('meta_description')} onChange={edit('meta_description')} onCommit={commit('meta_description')} rows={4} min={limits?.meta_min} max={limits?.meta_max} disabled={!canEdit || !fields} error={errors.meta_description} />
+                <MeteredField name="meta_description" label="Search description" value={value('meta_description')} onChange={edit('meta_description')} onCommit={commit('meta_description')} rows={4} min={limits?.meta_min} max={limits?.meta_max} disabled={!canEdit || !fields} error={errors.meta_description} />
                 {onDraftSnippet && canEdit ? (
                   <div>
                     <Button onClick={onDraftSnippet}>Draft the title and description with the assistant</Button>
@@ -294,11 +294,11 @@ export function PostSeoPanel({ uuid, refreshKey, onJump, onSaved, site, shareIma
               <h3 id="gr-seo-keywords" className="gr-section-title">Keywords</h3>
               <label className="gr-stack">
                 <span className="gr-row-title">Focus keyword</span>
-                <input className={INPUT} value={value('focus_keyword')} disabled={!canEdit || !fields} onChange={(e) => edit('focus_keyword')(e.target.value)} onBlur={(e) => commit('focus_keyword')(e.target.value.trim())} placeholder="The phrase readers search for" />
+                <input name="focus_keyword" className={INPUT} value={value('focus_keyword')} disabled={!canEdit || !fields} onChange={(e) => edit('focus_keyword')(e.target.value)} onBlur={(e) => commit('focus_keyword')(e.target.value.trim())} placeholder="The phrase readers search for" />
               </label>
               <label className="gr-stack">
                 <span className="gr-row-title">Secondary keywords</span>
-                <input className={INPUT} value={value('secondary_keywords')} disabled={!canEdit || !fields} onChange={(e) => edit('secondary_keywords')(e.target.value)} onBlur={(e) => commit('secondary_keywords')(e.target.value.trim())} placeholder="Separated by commas" />
+                <input name="secondary_keywords" className={INPUT} value={value('secondary_keywords')} disabled={!canEdit || !fields} onChange={(e) => edit('secondary_keywords')(e.target.value)} onBlur={(e) => commit('secondary_keywords')(e.target.value.trim())} placeholder="Separated by commas" />
               </label>
               {focus || chips.length > 0 ? (
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }} aria-label="Keywords in use">
