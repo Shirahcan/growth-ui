@@ -117,6 +117,10 @@ describe('a public post', () => {
     expect(out).toContain('IRCC: CRS criteria');
     expect(out).toContain('data-part="footer"');
 
+    // A design with its own Sources block: the footer's list is not drawn a second time.
+    const withSources = html(<PublicPostArticle post={{ ...guide, design_draws: { ...guide.design_draws, sources: true } }} column={column} design={<div data-design />} />);
+    expect(withSources).not.toContain('IRCC: CRS criteria');
+
     // A design with none of its own (a story) keeps the article's: the footer is all it has.
     const story = html(<PublicPostArticle post={{ ...guide, design_draws: { header: false, questions: false, disclaimer: false, cta: false } }} column={column} design={<div data-design />} />);
     expect(story).toContain('data-part="header"');

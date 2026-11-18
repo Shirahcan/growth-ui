@@ -127,7 +127,7 @@ function PostHeader({ post, Link, words, paths, locale }: { post: PublicBlogPost
 }
 
 function PostFooter({ post, Link, words, draws, signup, ask, after }: { post: PublicBlogPost; Link: PublicLink; words: PublicBlogWords; draws: PublicDesignDraws | null; signup?: ReactNode; ask?: ReactNode; after?: ReactNode }) {
-  const sources = (post.sources ?? []).filter((s) => s.url && s.label);
+  const sources = draws?.sources ? [] : (post.sources ?? []).filter((s) => s.url && s.label);
   // The design's own FAQ, disclaimer and calls to action are already on the page; the questions still feed the
   // host's FAQ markup from `post.reader_questions`.
   const questions = draws?.questions ? [] : post.reader_questions ?? [];

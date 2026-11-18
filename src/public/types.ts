@@ -56,6 +56,8 @@ export interface PublicDesignDraws {
   questions?: boolean;
   disclaimer?: boolean;
   cta?: boolean;
+  /** The design's own Sources block (the official pages, linked): the footer's list is not drawn too. */
+  sources?: boolean;
 }
 
 export interface PublicBlogPost extends PublicBlogCard {
