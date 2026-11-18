@@ -102,6 +102,11 @@ export interface BlogPostSummary {
   updated_at: string | null;
   /** The post's address on the product's blog; null while the product has not set its blog address. Never assembled here. */
   public_url?: string | null;
+  /** The list's Author and Template columns (growth-service 2026-11-18); absent from an older service. */
+  author_name?: string | null;
+  layout_key?: string | null;
+  /** The template's name; null when the post has none (written before templates) or its layout is gone. */
+  layout_name?: string | null;
 }
 
 /** A post's reach as the PRODUCT measures it (Portify's growth results), passed in by the host per post uuid. */

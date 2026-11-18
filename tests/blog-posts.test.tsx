@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import { BlogPosts, GrowthProvider, postStatus, postsPath, type BlogPostSummary } from '../src';
+import { BlogPosts, GrowthProvider, postDate, postStatus, postTemplate, postsPath, type BlogPostSummary } from '../src';
 
 const hrefFor = (tab: string) => `/admin/growth/${tab}`;
 
@@ -23,22 +23,62 @@ function mount(request: ReturnType<typeof vi.fn>, props: Partial<React.Component
   return { navigate };
 }
 
-function server(posts: BlogPostSummary[]) {
+function server(posts: BlogPostSummary[], scores: Record<string, number> | 'fail' = {}) {
   return vi.fn(async (method: string, path: string) => {
     if (method === 'GET' && path.startsWith('blog/categories')) return { data: { categories: [] } };
     if (method === 'GET') return { data: { posts } };
+    if (method === 'POST' && path === 'blog/posts/scores') {
+      if (scores === 'fail') throw new Error('The service could not score the posts.');
+      return { data: { scores, pass: 85 } };
+    }
     return { message: method === 'DELETE' ? 'Post deleted. Anything already published keeps its record.' : 'Unpublished. It no longer appears on the blog.', data: {} };
   });
 }
 
 /** Growth > Blog on growth-service (S5 step 1): the posts list, its filters and its row menu. */
 describe('the blog posts list', () => {
+  it('is a table of title, author, template, score, status and date, as the reference studio lists posts', async () => {
+    const guide = { ...live, author_name: 'Ada Okafor', layout_key: 'full-guide', layout_name: 'Full guide', published_at: '2026-11-16T15:00:00Z' };
+    const request = server([guide, designed], { 'u-live': 92, 'u-design': 41 });
+    mount(request);
+
+    const table = within(await screen.findByRole('table', { name: 'Posts' }));
+    expect(table.getAllByRole('columnheader').map((h) => h.textContent)).toEqual(['Title', 'Author', 'Template', 'Score', 'Status', 'Date', 'Actions']);
+    const [, first, second] = table.getAllByRole('row') as [HTMLElement, HTMLElement, HTMLElement];
+    expect(within(first).getByRole('link', { name: 'CRS explained' })).toBeTruthy();
+    expect(within(first).getByText('Ada Okafor')).toBeTruthy();
+    expect(within(first).getByText('Full guide')).toBeTruthy();
+    expect(within(first).getAllByText('Published')).toHaveLength(2); // the status, and what the date means
+    expect(await within(first).findByText('92')).toBeTruthy();
+    expect(first.textContent).toContain('92/100');
+    expect(within(second).getByText('Not named yet')).toBeTruthy();
+    expect(within(second).getByText('Designed, no template')).toBeTruthy();
+    expect(within(second).getByText('41')).toBeTruthy();
+    // One call for exactly the rows on screen.
+    expect(request).toHaveBeenCalledWith('POST', 'blog/posts/scores', { uuids: ['u-live', 'u-design'] });
+  });
+
+  it('a row the service could not score says so, and a failed call never leaves the table waiting', async () => {
+    mount(server([live], 'fail'));
+    expect(await screen.findByText('Not scored')).toBeTruthy();
+  });
+
+  it('names a template by its name, and dates a row by what it means', () => {
+    expect(postTemplate({ ...live, layout_name: 'Classic' })).toBe('Classic');
+    expect(postTemplate({ ...live, layout_key: 'news-update', layout_name: null })).toBe('News update');
+    expect(postTemplate({ ...live, body_format: 'html' })).toBe('Written, no template');
+    expect(postDate({ ...live, published_at: '2026-11-16T15:00:00Z' })).toEqual({ label: 'Published', iso: '2026-11-16T15:00:00Z' });
+    expect(postDate({ ...base, uuid: 's', id: 9, title: 'x', status: 'scheduled', scheduled_for: '2026-12-01T09:00:00Z' })).toEqual({ label: 'Scheduled', iso: '2026-12-01T09:00:00Z' });
+    expect(postDate({ ...designed, updated_at: '2026-11-18T10:00:00Z' })).toEqual({ label: 'Last edited', iso: '2026-11-18T10:00:00Z' });
+    expect(postDate(designed)).toBeNull();
+  });
+
   it('shows each post with its status, category and the product’s own reach figures', async () => {
     mount(server([live, designed, stale]), { reach: { 'u-live': { readers: 1, subscribers: 3 } } });
 
     expect(await screen.findByText('CRS explained')).toBeTruthy();
     // The status tabs share some words with the pills, so read the pills inside the list itself.
-    const list = within(screen.getByRole('list', { name: 'Posts' }));
+    const list = within(screen.getByRole('table', { name: 'Posts' }));
     expect(list.getByText('Published')).toBeTruthy();
     expect(list.getByText('Draft')).toBeTruthy();
     expect(list.getByText('Facts need a look')).toBeTruthy();
@@ -52,7 +92,7 @@ describe('the blog posts list', () => {
     const reachFor = vi.fn(async () => ({ 'u-live': { readers: 7, subscribers: 2 } }));
     mount(server([live, designed]), { reachFor });
 
-    const list = within(await screen.findByRole('list', { name: 'Posts' }));
+    const list = within(await screen.findByRole('table', { name: 'Posts' }));
     expect(await list.findByText('7 readers, 2 subscribers')).toBeTruthy();
     expect(reachFor).toHaveBeenCalledWith([{ uuid: 'u-live', slug: 'crs-explained' }, { uuid: 'u-design', slug: designed.slug }]);
   });

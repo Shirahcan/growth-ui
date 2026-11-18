@@ -59,6 +59,11 @@ export interface CreatePostFlow {
 export interface CreatePostFlowOptions {
   /** The template picked before the author chooses (the product's default, e.g. Portify's "Classic"); else the first. */
   defaultTemplate?: string;
+  /**
+   * How the post starts before the author chooses: a host's "Import a post" opens the flow on "Start from a document"
+   * (owner 2026-11-18, the reference studio's Import a post). The author can still switch. Default: the template alone.
+   */
+  start?: 'document' | 'template';
 }
 
 /**
@@ -67,7 +72,7 @@ export interface CreatePostFlowOptions {
  */
 export function useCreatePostFlow(options: CreatePostFlowOptions = {}): CreatePostFlow {
   const { request, onError } = useGrowth();
-  const [draft, setDraft] = useState<CreatePostDraft>({ layout_key: null, start: 'template' });
+  const [draft, setDraft] = useState<CreatePostDraft>({ layout_key: null, start: options.start ?? 'template' });
   const [document, setDocument] = useState<File | null>(null);
   const [cover, setCover] = useState<File | null>(null);
   const [templates, setTemplates] = useState<PostTemplate[] | null>(null);

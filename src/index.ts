@@ -66,7 +66,7 @@ export { CtaEditor, CtaPreview, bodyFrom as ctaBodyFrom, draftFrom as ctaDraftFr
 export type { CtaDraft } from './blog/CtaEditor';
 export { StoryBank } from './blog/StoryBank';
 export { BlogCategories, categoryBodyFrom, categoryDraftFrom, slugFrom } from './blog/BlogCategories';
-export { BlogPosts, postStatus, postsPath } from './blog/BlogPosts';
+export { BlogPosts, postDate, postStatus, postTemplate, postsPath } from './blog/BlogPosts';
 export type { BlogPostsProps } from './blog/BlogPosts';
 export { PostSettings, PostReadiness } from './blog/PostSettings';
 export type { PostSettingsProps } from './blog/PostSettings';

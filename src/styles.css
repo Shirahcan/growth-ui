@@ -241,6 +241,64 @@
 .gr-sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 a.gr-button { text-decoration: none; }
 
+/* A data table (the blog's post list, 2026-11-18): small uppercase headings on a faint band, as the host's own tables
+   draw them; the table scrolls inside its card on a narrow screen, never the page. */
+.gr-table-wrap { overflow-x: auto; margin-top: 0.25rem; }
+.gr-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+.gr-table th {
+  text-align: left;
+  padding: 0.625rem 0.75rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--gr-ink-muted, #64748b);
+  background: var(--gr-surface-muted, #f8fafc);
+  border-bottom: 1px solid var(--gr-border, #e2e8f0);
+}
+.gr-table th:first-child { border-top-left-radius: 0.75rem; }
+.gr-table th:last-child { border-top-right-radius: 0.75rem; }
+.gr-table td {
+  padding: 0.75rem;
+  vertical-align: middle;
+  color: var(--gr-ink, #0f172a);
+  border-bottom: 1px solid var(--gr-border, #e2e8f0);
+}
+.gr-table tbody tr:last-child td { border-bottom: 0; }
+.gr-table tbody tr:hover td { background: var(--gr-surface-muted, #f8fafc); }
+.gr-table-main { min-width: 16rem; }
+.gr-table-link { font-weight: 700; color: var(--gr-ink, #0f172a); text-decoration: none; outline: none; }
+.gr-table-link:hover { color: var(--gr-accent, #4361ee); }
+.gr-table-link:focus-visible { border-radius: 0.25rem; box-shadow: 0 0 0 2px var(--gr-accent, #4361ee); }
+.gr-table-sub { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 0.25rem; font-size: 0.75rem; color: var(--gr-ink-muted, #64748b); }
+.gr-table-main .gr-hint { margin: 0.25rem 0 0; }
+.gr-table-when { display: block; font-size: 0.75rem; color: var(--gr-ink-muted, #64748b); }
+.gr-table-actions { width: 1%; text-align: right; }
+.gr-nowrap { white-space: nowrap; }
+/* The search score: the number on its colour, out of 100, as the designer's search panel shows it. */
+.gr-score {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.125rem 0.5rem 0.125rem 0.1875rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  white-space: nowrap;
+  color: var(--gr-ink-muted, #64748b);
+  border: 1px solid var(--gr-border, #e2e8f0);
+  border-radius: var(--gr-radius-pill, 9999px);
+  background: var(--gr-surface, #fff);
+}
+.gr-score-value {
+  min-width: 1.75rem;
+  padding: 0.0625rem 0.4rem;
+  text-align: center;
+  color: #fff;
+  border-radius: var(--gr-radius-pill, 9999px);
+  font-variant-numeric: tabular-nums;
+}
+
 /* The month's grid scrolls sideways inside its card, never the page. */
 .gr-calendar-scroll { overflow-x: auto; }
 .gr-calendar {
