@@ -269,7 +269,7 @@ export function PostSeoPanel({ uuid, refreshKey, onJump, onSaved, site, shareIma
                   ))}
                 </div>
               </div>
-              <SearchResultPreview url={seo.serp.url} title={seo.serp.title} description={seo.serp.description} mobile={mobile} />
+              <SearchResultPreview url={seo.serp.url} title={seo.serp.title} description={seo.serp.description} mobile={mobile} emptyAddress="The address appears once the blog’s address is set." />
             </section>
 
             <details open style={{ border: '1px solid #E4E4EF', borderRadius: 8 }}>

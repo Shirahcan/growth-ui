@@ -78,11 +78,26 @@ export function MeteredField({
   );
 }
 
-/** How the page shows in a search result, desktop or phone width. */
-export function SearchResultPreview({ url, title, description, mobile }: { url: string | null; title: string; description: string; mobile: boolean }) {
+/**
+ * How the page shows in a search result, desktop or phone width. `emptyAddress` is what shows while the page has no
+ * address yet (a blog post says the blog's address is not set; a site page has its own reason).
+ */
+export function SearchResultPreview({
+  url,
+  title,
+  description,
+  mobile,
+  emptyAddress = 'The address appears once it is set.',
+}: {
+  url: string | null;
+  title: string;
+  description: string;
+  mobile: boolean;
+  emptyAddress?: string;
+}) {
   return (
     <div style={{ border: '1px solid #E4E4EF', borderRadius: 8, padding: 12, display: 'grid', gap: 3, background: '#fff', maxWidth: mobile ? 300 : undefined }}>
-      <span style={{ fontSize: 12, color: '#4D5156', overflowWrap: 'anywhere' }}>{url ?? 'The address appears once the blog’s address is set.'}</span>
+      <span style={{ fontSize: 12, color: '#4D5156', overflowWrap: 'anywhere' }}>{url ?? emptyAddress}</span>
       <span style={{ fontSize: mobile ? 16 : 18, color: '#1A0DAB', lineHeight: 1.3 }}>{title || 'The search title shows here.'}</span>
       <span style={{ fontSize: 13, color: '#4D5156', lineHeight: 1.5 }}>{description || 'The search description shows here.'}</span>
     </div>
