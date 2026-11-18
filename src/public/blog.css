@@ -5,8 +5,14 @@
  * here, never assumed from a host's CSS reset. --gr-ink-soft is optional: body text a step lighter than the ink.
  */
 .gr-blog { color: var(--gr-ink, #0f172a); font-family: var(--gr-font, inherit); }
-.gr-blog h1, .gr-blog h2, .gr-blog p, .gr-blog ul, .gr-blog dl, .gr-blog dd { margin: 0; }
-.gr-blog ul { padding: 0; list-style: none; }
+/*
+ * The resets carry NO specificity (:where): a designed post's design is drawn inside the article, and a reset at
+ * .gr-blog's weight beat its own spacing classes (mx-auto, mt-2, list-disc), so a call to action's text sat off-centre
+ * and a design's lists lost their bullets (owner 2026-11-18: render the post exactly as designed). The article's own
+ * pieces set their spacing by class below, which still wins.
+ */
+:where(.gr-blog) :where(h1, h2, p, ul, dl, dd) { margin: 0; }
+:where(.gr-blog) :where(ul) { padding: 0; list-style: none; }
 .gr-blog-article { background: var(--gr-dialog-surface, #fff); }
 
 .gr-blog-categories { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 2rem; }
