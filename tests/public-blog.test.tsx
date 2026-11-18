@@ -104,6 +104,30 @@ describe('a public post', () => {
     expect(out).toContain('Questions readers ask');
   });
 
+  it('never draws a piece the design draws itself: one title and h1, one FAQ, one disclaimer, one call to action', () => {
+    const column: PublicPostColumn = (part, children) => <section data-part={part}>{children}</section>;
+    const guide: PublicBlogPost = { ...post, body_format: 'pml', design_draws: { header: true, questions: true, disclaimer: true, cta: true } };
+    const out = html(<PublicPostArticle post={guide} column={column} design={<div data-design><h1>CRS explained</h1></div>} />);
+
+    expect(out).not.toContain('data-part="header"');
+    expect(out.match(/<h1/g)).toHaveLength(1);
+    expect(out).not.toContain('Questions readers ask');
+    expect(out).not.toContain('General information, not professional advice.');
+    expect(out).not.toContain('href="/book"');
+    expect(out).toContain('IRCC: CRS criteria');
+    expect(out).toContain('data-part="footer"');
+
+    // A design with none of its own (a story) keeps the article's: the footer is all it has.
+    const story = html(<PublicPostArticle post={{ ...guide, design_draws: { header: false, questions: false, disclaimer: false, cta: false } }} column={column} design={<div data-design />} />);
+    expect(story).toContain('data-part="header"');
+    expect(story).toContain('Questions readers ask');
+    expect(story).toContain('General information, not professional advice.');
+    expect(story).toContain('href="/book"');
+
+    // A written post never reads it, even if a payload carries it.
+    expect(html(<PublicPostArticle post={guide} />)).toContain('Questions readers ask');
+  });
+
   it('draws the host signup form only for a subscribe call to action', () => {
     const subscribe: PublicBlogPost = { ...post, cta: { kind: 'subscribe', label: 'Get new guides by email' } };
     expect(html(<PublicPostArticle post={subscribe} signup={<form data-signup />} />)).toContain('Get new guides by email');

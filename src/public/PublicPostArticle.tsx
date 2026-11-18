@@ -8,6 +8,7 @@ import {
   type PublicBlogPaths,
   type PublicBlogPost,
   type PublicBlogWords,
+  type PublicDesignDraws,
   type PublicLink,
 } from './types';
 
@@ -59,19 +60,23 @@ const plainColumn: PublicPostColumn = (part, children) => (
  * Order, the same for every product: breadcrumb, category, title, byline, the answer, the written body; then the
  * design for a designed post; then Sources, the questions readers ask, the disclaimer, the call to action, the
  * host's extras. A written body is drawn as saved (it was sanitised then) and never re-cleaned here.
+ *
+ * A design that draws a piece itself (`post.design_draws`) is never drawn around twice: a full guide's own header
+ * replaces the article's (one title, one h1), and its FAQ, disclaimer and calls to action replace the footer's.
  */
 export function PublicPostArticle({ post, Link = Anchor, column = plainColumn, design, head, signup, ask, after, words, paths = DEFAULT_PUBLIC_PATHS, locale = 'en-CA', theme }: PublicPostArticleProps) {
   const w = { ...DEFAULT_PUBLIC_WORDS, ...(words ?? {}) };
   const style: CSSProperties | undefined = theme ? themeStyle(theme) : undefined;
+  const draws = design ? post.design_draws ?? null : null;
   const header = <PostHeader post={post} Link={Link} words={w} paths={paths} locale={locale} />;
-  const footer = <PostFooter post={post} Link={Link} words={w} signup={signup} ask={ask} after={after} />;
+  const footer = <PostFooter post={post} Link={Link} words={w} draws={draws} signup={signup} ask={ask} after={after} />;
 
   return (
     <article className="gr-blog gr-blog-article" style={style}>
       {head}
       {design ? (
         <>
-          {column('header', header)}
+          {draws?.header ? null : column('header', header)}
           {design}
           {column('footer', footer)}
         </>
@@ -121,10 +126,12 @@ function PostHeader({ post, Link, words, paths, locale }: { post: PublicBlogPost
   );
 }
 
-function PostFooter({ post, Link, words, signup, ask, after }: { post: PublicBlogPost; Link: PublicLink; words: PublicBlogWords; signup?: ReactNode; ask?: ReactNode; after?: ReactNode }) {
+function PostFooter({ post, Link, words, draws, signup, ask, after }: { post: PublicBlogPost; Link: PublicLink; words: PublicBlogWords; draws: PublicDesignDraws | null; signup?: ReactNode; ask?: ReactNode; after?: ReactNode }) {
   const sources = (post.sources ?? []).filter((s) => s.url && s.label);
-  const questions = post.reader_questions ?? [];
-  const cta = post.cta ?? null;
+  // The design's own FAQ, disclaimer and calls to action are already on the page; the questions still feed the
+  // host's FAQ markup from `post.reader_questions`.
+  const questions = draws?.questions ? [] : post.reader_questions ?? [];
+  const cta = draws?.cta ? null : post.cta ?? null;
 
   return (
     <>
@@ -155,7 +162,7 @@ function PostFooter({ post, Link, words, signup, ask, after }: { post: PublicBlo
         </section>
       ) : null}
 
-      <p className="gr-blog-disclaimer">{words.disclaimer}</p>
+      {draws?.disclaimer ? null : <p className="gr-blog-disclaimer">{words.disclaimer}</p>}
 
       {cta?.kind === 'subscribe' && cta.label && signup ? (
         <div className="gr-blog-signup" data-page-signup>

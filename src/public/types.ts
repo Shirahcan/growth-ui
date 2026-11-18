@@ -46,11 +46,25 @@ export interface PublicBlogCta {
   url?: string | null;
 }
 
+/**
+ * What a designed post's design draws itself (growth-service's PostDesignAnswers), so the article never draws it a second
+ * time around the design: a full guide draws its own title, breadcrumbs and byline, its FAQ, its disclaimer and its
+ * calls to action. Absent (a written post, or an older payload): the article draws all of it, as before.
+ */
+export interface PublicDesignDraws {
+  header?: boolean;
+  questions?: boolean;
+  disclaimer?: boolean;
+  cta?: boolean;
+}
+
 export interface PublicBlogPost extends PublicBlogCard {
   body_format: 'html' | 'pml' | string;
   /** Sanitised when it was saved; drawn as it is, never re-cleaned into a different shape. */
   body_html: string | null;
+  /** The questions the post answers: a designed post's own (its FAQ and question sections), else the questions field. */
   reader_questions: PublicReaderQuestion[];
+  design_draws?: PublicDesignDraws | null;
   sources?: PublicBlogSource[];
   cta?: PublicBlogCta | null;
   meta_description?: string;
