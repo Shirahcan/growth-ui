@@ -485,7 +485,9 @@ a.gr-button { text-decoration: none; }
 .gr-template-shelf-card > .gr-row-button { display: block; border-radius: 0.75rem; }
 .gr-template-retired .gr-template-page { filter: grayscale(1); opacity: 0.7; }
 /* A long list of choices (the new-template flow's posts and templates): one per line, scrolling inside its step. */
-.gr-choices-list { flex-direction: column; align-items: stretch; max-height: 18rem; overflow-y: auto; }
+/* One column that scrolls inside the step (never wraps into a second column that scrolls sideways), and shrinks on a
+   short screen so the step keeps its footer in one viewport. */
+.gr-choices-list { flex-direction: column; flex-wrap: nowrap; align-items: stretch; max-height: min(18rem, 40vh); overflow-x: hidden; overflow-y: auto; }
 .gr-choices-list > .gr-choice { display: flex; flex-direction: column; align-items: flex-start; gap: 0.125rem; text-align: left; white-space: normal; border-radius: 1rem; flex: none; }
 .gr-choice-title { font-weight: 600; }
 .gr-choice-hint { font-size: 0.75rem; font-weight: 400; opacity: 0.75; }
