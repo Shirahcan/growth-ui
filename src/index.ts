@@ -80,7 +80,16 @@ export { storySteps } from './blog/StorySteps';
 export type { StoryStep, StoryStepsOptions } from './blog/StorySteps';
 export { useStoryFlow, EMPTY_STORY, consentAt, localToday } from './blog/useStoryFlow';
 export type { StoryDraft, StoryFlow } from './blog/useStoryFlow';
-export { TemplateCards } from './blog/TemplateCards';
+export { TemplateCards, TemplateThumb } from './blog/TemplateCards';
+// Growth templates (owner 2026-11-20): the Templates page and its data.
+export { TemplatesPage } from './templates/TemplatesPage';
+export type { TemplatesPageProps } from './templates/TemplatesPage';
+export { useTemplates } from './templates/useTemplates';
+export type { TemplateRow, TemplateFilter, TemplatesOptions } from './templates/useTemplates';
+export { useNewTemplateFlow } from './templates/useNewTemplateFlow';
+export type { NewTemplateDraft, NewTemplateFlow, NewTemplateKind, NewTemplateStart, NewTemplateWords } from './templates/useNewTemplateFlow';
+export { newTemplateSteps } from './templates/NewTemplateSteps';
+export type { NewTemplateStep } from './templates/NewTemplateSteps';
 export type { TemplateCardsProps } from './blog/TemplateCards';
 export type { TemplatePreview } from './blog/useCreatePostFlow';
 export { createCampaignSteps } from './campaigns/CreateCampaignSteps';

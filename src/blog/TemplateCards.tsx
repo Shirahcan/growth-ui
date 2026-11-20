@@ -101,6 +101,26 @@ export function TemplateCards({ templates, previews, value, onChange, renderPrev
 }
 
 /**
+ * A template's thumbnail outside the picker (the Templates page, growth templates D1): the same page the picker's card
+ * draws, so a template looks the same in both places. `undefined` while it loads; `null` when it cannot be drawn.
+ */
+export function TemplateThumb({ name, preview }: { name: string; preview: TemplatePreview | null | undefined }) {
+  return (
+    <ScaledPage width={preview?.frame ? FRAME_WIDTH : PAGE_WIDTH}>
+      {preview?.frame ? (
+        <ReaderPage src={preview.frame} title={`${name} preview`} />
+      ) : preview?.html ? (
+        <iframe title={`${name} preview`} sandbox="" srcDoc={inTheLightScheme(withPicturePlaceholders(preview.html))} tabIndex={-1} className="gr-template-frame" style={{ width: PAGE_WIDTH, height: 1400, border: 0, colorScheme: 'light' }} />
+      ) : preview === undefined ? (
+        <span className="gr-template-loading">Drawing the preview…</span>
+      ) : (
+        <Shape nodes={preview?.nodes ?? []} />
+      )}
+    </ScaledPage>
+  );
+}
+
+/**
  * The product's reader page with a sample post, as a still picture (growth templates D3): fetched once, its scripts and
  * `<noscript>` blocks taken out and a `<base>` added so its styles, fonts and pictures still load, then drawn in a frame
  * that may not run anything. Framing the page itself ran the whole app in every card, and a frame forbidden to run it
