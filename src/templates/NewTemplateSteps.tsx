@@ -39,8 +39,8 @@ function List({ items, value, onPick, empty }: { items: Array<{ id: string; titl
     <div role="radiogroup" aria-label="Choose one" className="gr-choices gr-choices-list">
       {items.map((i) => (
         <button key={i.id} type="button" role="radio" aria-checked={value === i.id} onClick={() => onPick(i.id, i.title)} className={`gr-choice${value === i.id ? ' gr-choice-on' : ''}`}>
-          {i.title}
-          {i.hint ? <span className="gr-hint"> {i.hint}</span> : null}
+          <span className="gr-choice-title">{i.title}</span>
+          {i.hint ? <span className="gr-choice-hint">{i.hint}</span> : null}
         </button>
       ))}
     </div>
@@ -85,7 +85,7 @@ export function newTemplateSteps(flow: NewTemplateFlow): NewTemplateStep[] {
       validate: () => (draft.from ? null : 'Choose the template to copy.'),
       render: () => (
         <List
-          items={flow.templates === null ? null : flow.templates.map((t) => ({ id: t.key, title: t.name, hint: `(${t.parts} parts)` }))}
+          items={flow.templates === null ? null : flow.templates.map((t) => ({ id: t.key, title: t.name, hint: `${t.parts} parts, version ${t.version}` }))}
           value={draft.from}
           onPick={(from, fromTitle) => patch({ from, fromTitle, name: draft.name || `${fromTitle} copy` })}
           empty={`There is no ${what} template to copy yet. Start from a blank template instead.`}
@@ -103,7 +103,7 @@ export function newTemplateSteps(flow: NewTemplateFlow): NewTemplateStep[] {
         <div className="gr-stack">
           <Field label={`Search ${what}s`}>{(id) => <input id={id} type="search" className={INPUT} value={flow.q} onChange={(e) => flow.setQ(e.target.value)} placeholder="A word in the title" />}</Field>
           <List
-            items={flow.items === null ? null : flow.items.map((i) => ({ id: i.uuid, title: i.title }))}
+            items={flow.items === null ? null : flow.items.map((i) => ({ id: i.uuid, title: i.title, hint: i.hint }))}
             value={draft.from}
             onPick={(from, fromTitle) => patch({ from, fromTitle })}
             empty={`No ${what} matches. Try another word, or start from a blank template.`}

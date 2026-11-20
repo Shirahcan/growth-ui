@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useGrowth } from '../GrowthProvider';
 import { TemplateThumb } from '../blog/TemplateCards';
+import { fieldError } from '../settings/SourceDialog';
 import { Button, ChoiceGroup, Dialog, Empty, Field, INPUT, Kebab, LoadError, Loading, Pill, Refusal, copyText } from '../ui/primitives';
 import { useTemplates, type TemplateFilter, type TemplateRow, type TemplatesOptions } from './useTemplates';
 
@@ -40,9 +41,11 @@ export function TemplatesPage({ onEdit, framePreview }: TemplatesPageProps) {
 
       return true;
     } catch (e) {
-      // A refusal in the service's words stays on the dialog (the last template of a kind, a name in use).
-      setRefusal(e instanceof Error ? e.message : 'That did not work.');
-      onError(e);
+      // A refusal in the service's words stays on the dialog (the last template of a kind, a name in use); anything
+      // else is the host's to report. Never both, so one refusal is never said twice.
+      const field = fieldError(e);
+      if (field) setRefusal(field);
+      else onError(e);
 
       return false;
     } finally {

@@ -49,7 +49,7 @@ describe('making a template', () => {
 
   it('keeps the service refusing a name in its own words', async () => {
     const request = vi.fn(async (method: string) => {
-      if (method === 'POST') throw new Error('A template already has that name. Choose another.');
+      if (method === 'POST') throw Object.assign(new Error('Request failed'), { response: { status: 422, data: { message: 'The given data was invalid.', errors: { name: ['A template already has that name. Choose another.'] } } } });
 
       return { data: { layouts: [] } };
     });

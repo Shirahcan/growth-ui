@@ -4,6 +4,9 @@ import { GrowthProvider } from '../src/GrowthProvider';
 import { TemplatesPage } from '../src/templates/TemplatesPage';
 
 /** Growth templates D1 (owner 2026-11-20): admins manage blog and newsletter templates on one page; retire, never erase. */
+/** The rejection the host's request throws for a service refusal (axios-shaped 422). */
+const refused = (message: string) => Object.assign(new Error(message), { response: { status: 422, data: { message } } });
+
 const asked = (request: ReturnType<typeof vi.fn>, method: string, path: string) => request.mock.calls.some((c) => c[0] === method && c[1] === path);
 
 const rows = [
@@ -11,10 +14,10 @@ const rows = [
   { key: 'portify-weekly', kind: 'email', name: 'Portify Weekly', version: 1, status: 'active', parts: 10, source: { kind: 'post', uuid: 'u', title: 'LMIA guide', words: 'keep' } },
 ];
 
-function mount(request: ReturnType<typeof vi.fn>, onEdit = vi.fn(), framePreview = vi.fn(async () => null)) {
+function mount(request: ReturnType<typeof vi.fn>, onEdit = vi.fn(), framePreview = vi.fn(async () => null), onError = vi.fn()) {
   const notify = vi.fn();
   render(
-    <GrowthProvider product="portify" request={request as never} hrefFor={(() => '#') as never} onError={vi.fn()} onNotice={notify} words={{ audiences: {}, product: 'Portify' }}>
+    <GrowthProvider product="portify" request={request as never} hrefFor={(() => '#') as never} onError={onError} onNotice={notify} words={{ audiences: {}, product: 'Portify' }}>
       <TemplatesPage onEdit={onEdit} framePreview={framePreview} />
     </GrowthProvider>,
   );
@@ -52,11 +55,12 @@ describe('the Templates page', () => {
   it('asks before retiring, and shows the service refusing the last template of a kind in its own words', async () => {
     const request = vi.fn(async (method: string, path: string) => {
       if (method === 'GET' && path === 'layouts') return { data: { layouts: [rows[0]] } };
-      if (method === 'POST' && path === 'layouts/full-guide/retire') throw new Error('"Classic" is the only blog template left, so it stays: add another blog template first.');
+      if (method === 'POST' && path === 'layouts/full-guide/retire') throw refused('"Classic" is the only blog template left, so it stays: add another blog template first.');
 
       return { data: { preview: {} } };
     });
-    mount(request);
+    const onError = vi.fn();
+    mount(request, vi.fn(), vi.fn(async () => null), onError);
 
     fireEvent.click(await screen.findByRole('button', { name: 'Actions for Classic' }));
     const items = screen.getAllByRole('menuitem').map((i) => i.textContent);
@@ -66,6 +70,7 @@ describe('the Templates page', () => {
     expect(screen.getByRole('dialog', { name: 'Retire "Classic"?' })).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Retire' }));
     expect(await screen.findByText('"Classic" is the only blog template left, so it stays: add another blog template first.')).toBeTruthy();
+    expect(onError).not.toHaveBeenCalled();
   });
 
   it('opens a template in the designer from its picture or its menu', async () => {

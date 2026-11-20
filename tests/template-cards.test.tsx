@@ -45,13 +45,13 @@ describe('the template preview cards', () => {
   });
 
   it('draws the reader page as a still picture: no scripts, its addresses kept', () => {
-    const page = '<html><head><link rel="stylesheet" href="/_next/a.css"><script src="/_next/x.js"></script><link rel="modulepreload" as="script" href="/_next/y.js"></head><body><h1>A clear question</h1><script>self.__next=1</script><noscript><iframe src="/tag"></iframe></noscript></body></html>';
+    const page = '<html><head><link rel="stylesheet" href="/_next/a.css"><script src="/_next/x.js"></script><link rel="modulepreload" as="script" href="/_next/y.js"><link rel="preload" as="image" href="/images/logos/color.png"></head><body><h1>A clear question</h1><script>self.__next=1</script><noscript><iframe src="/tag"></iframe></noscript></body></html>';
     const still = stillPage(page, 'http://localhost/blog/template-preview/abc');
 
     expect(still).toContain('<h1>A clear question</h1>');
     expect(still).toContain('<base href="http://localhost/blog/template-preview/abc">');
     expect(still).toContain('href="/_next/a.css"');
-    expect(still).not.toMatch(/<script|<noscript|modulepreload/i);
+    expect(still).not.toMatch(/<script|<noscript|modulepreload|rel="preload"/i);
   });
 
   it('asks the host for the reader page of each template and prefers it over the drawn starter', async () => {

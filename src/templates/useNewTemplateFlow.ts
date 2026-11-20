@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useGrowth } from '../GrowthProvider';
 import { unwrap, type Envelope } from '../plan/types';
+import { fieldError } from '../settings/SourceDialog';
 import type { TemplateRow } from './useTemplates';
 
 export type NewTemplateKind = 'post' | 'email';
@@ -22,6 +23,27 @@ export interface NewTemplateDraft {
 export interface TemplateSourceItem {
   uuid: string;
   title: string;
+  /** Tells apart two with the same title: its state and its date ("Draft, edited 20 Nov"). */
+  hint: string;
+}
+
+const day = (iso: string | null | undefined): string | null => {
+  if (!iso) return null;
+  const d = new Date(iso);
+
+  return Number.isNaN(d.getTime()) ? null : d.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
+};
+
+function postHint(p: { status?: string; live?: boolean; updated_at?: string | null; published_at?: string | null }): string {
+  const when = day(p.live ? p.published_at : p.updated_at);
+
+  return p.live ? `Live${when ? `, published ${when}` : ''}` : `${p.status === 'scheduled' ? 'Scheduled' : 'Draft'}${when ? `, edited ${when}` : ''}`;
+}
+
+function campaignHint(c: { status?: string; sent_at?: string | null }): string {
+  const when = day(c.sent_at);
+
+  return c.status === 'sent' ? `Sent${when ? ` ${when}` : ''}` : c.status === 'scheduled' ? 'Scheduled' : 'Draft';
 }
 
 /**
@@ -63,10 +85,11 @@ export function useNewTemplateFlow(initial: Partial<NewTemplateDraft> = {}) {
     let live = true;
     const query = q.trim() !== '' ? `?q=${encodeURIComponent(q.trim())}` : '';
     const read = draft.kind === 'post'
-      ? request<Envelope<{ posts: Array<{ uuid: string; title: string }> }>>('GET', `blog/posts${query}`).then((res) => unwrap(res).posts.map((p) => ({ uuid: p.uuid, title: p.title || 'Untitled post' })))
-      : request<Envelope<{ campaigns: Array<{ uuid: string; subject: string }> }>>('GET', 'campaigns').then((res) => unwrap(res).campaigns
+      ? request<Envelope<{ posts: Array<{ uuid: string; title: string; status?: string; live?: boolean; updated_at?: string | null; published_at?: string | null }> }>>('GET', `blog/posts${query}`)
+        .then((res) => unwrap(res).posts.map((p) => ({ uuid: p.uuid, title: p.title || 'Untitled post', hint: postHint(p) })))
+      : request<Envelope<{ campaigns: Array<{ uuid: string; subject: string; status?: string; sent_at?: string | null }> }>>('GET', 'campaigns').then((res) => unwrap(res).campaigns
         .filter((c) => q.trim() === '' || (c.subject ?? '').toLowerCase().includes(q.trim().toLowerCase()))
-        .map((c) => ({ uuid: c.uuid, title: c.subject || 'Untitled newsletter' })));
+        .map((c) => ({ uuid: c.uuid, title: c.subject || 'Untitled newsletter', hint: campaignHint(c) })));
     read
       .then((list) => live && setItems(list.slice(0, 50)))
       .catch((e) => {
@@ -91,9 +114,11 @@ export function useNewTemplateFlow(initial: Partial<NewTemplateDraft> = {}) {
 
       return unwrap(res).layout;
     } catch (e) {
-      // The service's own words (a name in use, a written newsletter, an empty post) stay on the last step.
-      setRefusal(e instanceof Error ? e.message : 'The template could not be made.');
-      onError(e);
+      // The service's own words (a name in use, a written newsletter, an empty post) stay on the last step; anything
+      // else is the host's to report. Never both.
+      const field = fieldError(e);
+      if (field) setRefusal(field);
+      else onError(e);
 
       return null;
     } finally {

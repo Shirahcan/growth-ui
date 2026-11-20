@@ -155,7 +155,9 @@ export function stillPage(html: string, src: string): string {
     .replace(/<script\b[\s\S]*?<\/script\s*>/gi, '')
     .replace(/<script\b[^>]*\/>/gi, '')
     .replace(/<noscript\b[\s\S]*?<\/noscript\s*>/gi, '')
-    .replace(/<link\b[^>]*\brel=["']?(?:modulepreload|preload)["']?[^>]*\bas=["']?script["']?[^>]*>/gi, '');
+    // Every preload goes: a still picture fetches nothing ahead, and an unused image preload (the site header's logo)
+    // only warns in the admin's console.
+    .replace(/<link\b[^>]*\brel=["']?(?:modulepreload|preload)["']?[^>]*>/gi, '');
   const tag = `<base href="${base.replace(/"/g, '&quot;')}">`;
 
   return /<head[^>]*>/i.test(still) ? still.replace(/<head[^>]*>/i, (head) => head + tag) : tag + still;
