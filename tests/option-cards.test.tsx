@@ -37,6 +37,7 @@ describe('the email canvas frame', () => {
     expect(style['--site-accent']).toBe('#4361EE');
     expect(style['--site-accent-text']).toBe('#FFFFFF');
     expect(style['--site-button-radius']).toBe('9999px');
+    expect(style['--site-button-width']).toBe('fit-content');
     expect(emailCanvasFrame(null)).toBeUndefined();
   });
 });

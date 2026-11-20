@@ -30,6 +30,8 @@ export function emailCanvasFrame(canvas: EmailCanvas | null | undefined): { styl
       '--site-on-strong': c.on_strong ?? c.card,
       '--site-radius': '8px',
       '--site-button-radius': '9999px',
+      // As wide as its words, as the sent email draws it (pml-ui 0.7.87 reads this; a site page leaves it unset).
+      '--site-button-width': 'fit-content',
       '--site-font-body': canvas.font,
       '--site-font-heading': canvas.font,
       fontFamily: canvas.font,
