@@ -18,7 +18,7 @@ const call = (request: ReturnType<typeof vi.fn>, method: string, path: string) =
 
 describe('making a template', () => {
   it('asks what it is for, where it starts and its name; the words only for a post or newsletter', () => {
-    const request = vi.fn(async () => ({ data: { layouts: [], posts: [] } }));
+    const request = vi.fn(async (..._args: unknown[]) => ({ data: { layouts: [], posts: [] } }));
     const { result } = renderHook(() => useNewTemplateFlow(), { wrapper: wrap(request) });
 
     expect(newTemplateSteps(result.current).map((s) => s.id)).toEqual(['kind', 'start', 'name']);
@@ -29,7 +29,7 @@ describe('making a template', () => {
   });
 
   it('a blank one and a copy go to the create row; a post goes to its own row with the words chosen', async () => {
-    const request = vi.fn(async () => ({ data: { layout: { key: 'made', kind: 'post', name: 'Made', version: 1, status: 'active', parts: 1 }, layouts: [], posts: [{ uuid: 'p-1', title: 'LMIA guide' }] } }));
+    const request = vi.fn(async (..._args: unknown[]) => ({ data: { layout: { key: 'made', kind: 'post', name: 'Made', version: 1, status: 'active', parts: 1 }, layouts: [], posts: [{ uuid: 'p-1', title: 'LMIA guide' }] } }));
     const { result } = renderHook(() => useNewTemplateFlow(), { wrapper: wrap(request) });
 
     act(() => result.current.patch({ kind: 'post', start: 'blank', name: 'Short answer' }));
