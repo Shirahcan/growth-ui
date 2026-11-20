@@ -25,6 +25,12 @@ export interface TemplatePreview {
    * sandboxed frame, so no host renderer is needed. Absent for posts.
    */
   html?: string | null;
+  /**
+   * A page that draws the template as a READER sees a post made from it (growth templates D3, owner 2026-11-20: the
+   * thumbnail "must accurately mirror the template"): the product's own public post page with a sample post, which the
+   * card shows in a frame, so its fonts, width, header, summary and cover are the live site's. From the host.
+   */
+  frame?: string | null;
 }
 
 /** What the create flow decides. Kept as the host wizard's draft, so an interrupted pick is resumed (files are not). */
@@ -64,6 +70,11 @@ export interface CreatePostFlowOptions {
    * (owner 2026-11-18, the reference studio's Import a post). The author can still switch. Default: the template alone.
    */
   start?: 'document' | 'template';
+  /**
+   * The address of a page that draws a template as a reader sees it (growth templates D3), from the host (Portify: a
+   * short-lived template preview link). With it, a card shows that page; without it, the drawn starter as before.
+   */
+  framePreview?: (key: string) => Promise<string | null>;
 }
 
 /**
@@ -81,7 +92,7 @@ export function useCreatePostFlow(options: CreatePostFlowOptions = {}): CreatePo
   const [creating, setCreating] = useState(false);
   const [refusal, setRefusal] = useState<string | null>(null);
   const [previews, setPreviews] = useState<Record<string, TemplatePreview | null>>({});
-  const { defaultTemplate } = options;
+  const { defaultTemplate, framePreview } = options;
 
   const patch = useCallback((p: Partial<CreatePostDraft>) => setDraft((d) => ({ ...d, ...p })), []);
 
@@ -118,17 +129,23 @@ export function useCreatePostFlow(options: CreatePostFlowOptions = {}): CreatePo
       request<Envelope<{ starter: TemplatePreview }>>('GET', `layouts/${encodeURIComponent(t.key)}?starter=1`)
         .then((res) => {
           const starter = unwrap(res).starter;
-          if (live) setPreviews((p) => ({ ...p, [t.key]: { nodes: starter?.nodes ?? [], tree: starter?.tree ?? null } }));
+          if (live) setPreviews((p) => ({ ...p, [t.key]: { ...p[t.key], nodes: starter?.nodes ?? [], tree: starter?.tree ?? null } }));
         })
         .catch(() => {
-          if (live) setPreviews((p) => ({ ...p, [t.key]: null }));
+          if (live) setPreviews((p) => (p[t.key]?.frame ? p : { ...p, [t.key]: null }));
         });
+      // The reader's page, when the host can draw one: the card prefers it over the drawn starter.
+      framePreview?.(t.key)
+        .then((frame) => {
+          if (live && frame) setPreviews((p) => ({ ...p, [t.key]: { nodes: p[t.key]?.nodes ?? [], tree: p[t.key]?.tree ?? null, frame } }));
+        })
+        .catch(() => undefined);
     });
 
     return () => {
       live = false;
     };
-  }, [request, templates]);
+  }, [request, templates, framePreview]);
 
   const create = useCallback(async (): Promise<BlogPostDetail | null> => {
     if (!draft.layout_key) return null;

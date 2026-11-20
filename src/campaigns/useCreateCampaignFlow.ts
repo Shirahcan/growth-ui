@@ -108,11 +108,19 @@ export function useCreateCampaignFlow(options: CreateCampaignFlowOptions = {}): 
       request<Envelope<{ starter: TemplatePreview }>>('GET', `layouts/${encodeURIComponent(t.key)}?starter=1`)
         .then((res) => {
           const starter = unwrap(res).starter;
-          if (live) setPreviews((p) => ({ ...p, [t.key]: { nodes: starter?.nodes ?? [], tree: starter?.tree ?? null, html: starter?.html ?? null } }));
+          if (live) setPreviews((p) => ({ ...p, [t.key]: { nodes: starter?.nodes ?? [], tree: starter?.tree ?? null, html: p[t.key]?.html ?? starter?.html ?? null } }));
         })
         .catch(() => {
           if (live) setPreviews((p) => ({ ...p, [t.key]: null }));
         });
+      // The email as a reader's inbox shows it (growth templates D3): sample words and a sample picture instead of the
+      // guidance brackets and a grey box. A service without it keeps the starter's email.
+      request<Envelope<{ preview: { kind: string; html?: string } }>>('GET', `layouts/${encodeURIComponent(t.key)}/reader-preview`)
+        .then((res) => {
+          const html = unwrap(res).preview?.html;
+          if (live && html) setPreviews((p) => ({ ...p, [t.key]: { nodes: p[t.key]?.nodes ?? [], tree: p[t.key]?.tree ?? null, html } }));
+        })
+        .catch(() => undefined);
     });
 
     return () => {

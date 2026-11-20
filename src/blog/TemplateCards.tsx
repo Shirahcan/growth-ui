@@ -22,6 +22,10 @@ export interface TemplateCardsProps {
 /** The width a preview is drawn at before it is scaled down to the card (a post's reading width plus its margins). */
 const PAGE_WIDTH = 960;
 
+/** The width a reader's page is framed at (a desktop window), and how much of it a card shows. */
+const FRAME_WIDTH = 1440;
+const FRAME_HEIGHT = 2200;
+
 export function TemplateCards({ templates, previews, value, onChange, renderPreview }: TemplateCardsProps) {
   const cards = useRef<Array<HTMLDivElement | null>>([]);
   const group = useId();
@@ -63,8 +67,11 @@ export function TemplateCards({ templates, previews, value, onChange, renderPrev
             onClick={() => onChange(t.key)}
             onKeyDown={(e) => move(e, index)}
           >
-            <ScaledPage>
-              {preview === undefined ? (
+            <ScaledPage width={preview?.frame ? FRAME_WIDTH : PAGE_WIDTH}>
+              {preview?.frame ? (
+                // The product's own reader page with a sample post: same-origin so its fonts load, never scripts.
+                <iframe title={`${t.name} preview`} src={preview.frame} sandbox="allow-same-origin" tabIndex={-1} loading="lazy" className="gr-template-frame" style={{ width: FRAME_WIDTH, height: FRAME_HEIGHT, border: 0, colorScheme: 'light' }} />
+              ) : preview === undefined ? (
                 <span className="gr-template-loading">Drawing the preview…</span>
               ) : preview && preview.tree && renderPreview ? (
                 renderPreview(preview.tree)
@@ -123,8 +130,8 @@ export function inTheLightScheme(html: string): string {
   return /<head[^>]*>/i.test(forced) ? forced.replace(/<head[^>]*>/i, (head) => head + declare) : declare + forced;
 }
 
-/** A page drawn at PAGE_WIDTH and scaled to the card's width; a picture, never something to press. */
-function ScaledPage({ children }: { children: ReactNode }) {
+/** A page drawn at `width` and scaled to the card's width; a picture, never something to press. */
+function ScaledPage({ children, width = PAGE_WIDTH }: { children: ReactNode; width?: number }) {
   const box = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(0.25);
 
@@ -132,16 +139,16 @@ function ScaledPage({ children }: { children: ReactNode }) {
     const el = box.current;
     if (!el || typeof ResizeObserver === 'undefined') return;
     const watch = new ResizeObserver(([entry]) => {
-      if (entry && entry.contentRect.width > 0) setScale(entry.contentRect.width / PAGE_WIDTH);
+      if (entry && entry.contentRect.width > 0) setScale(entry.contentRect.width / width);
     });
     watch.observe(el);
 
     return () => watch.disconnect();
-  }, []);
+  }, [width]);
 
   return (
     <div ref={box} className="gr-template-page" aria-hidden="true">
-      <div className="gr-template-page-inner" style={{ width: PAGE_WIDTH, transform: `scale(${scale})` }} {...{ inert: true }}>
+      <div className="gr-template-page-inner" style={{ width, transform: `scale(${scale})` }} {...{ inert: true }}>
         {children}
       </div>
     </div>

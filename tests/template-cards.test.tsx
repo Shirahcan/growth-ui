@@ -28,6 +28,47 @@ function mount(request: ReturnType<typeof vi.fn>, options: CreatePostStepsOption
 }
 
 describe('the template preview cards', () => {
+  it('frames the reader page the host gives, at a desktop width, with no scripts (growth templates D3)', () => {
+    const { container } = render(
+      <TemplateCards
+        templates={[{ key: 'full-guide', name: 'Classic', parts: 9 }]}
+        previews={{ 'full-guide': { nodes: [], tree: null, frame: '/blog/template-preview/abc' } }}
+        value="full-guide"
+        onChange={vi.fn()}
+        renderPreview={() => <p>drawn</p>}
+      />,
+    );
+
+    const frame = container.querySelector('iframe');
+    expect(frame?.getAttribute('src')).toBe('/blog/template-preview/abc');
+    expect(frame?.getAttribute('sandbox')).toBe('allow-same-origin');
+    expect((frame as HTMLIFrameElement).style.width).toBe('1440px');
+    expect(screen.queryByText('drawn')).toBeNull();
+  });
+
+  it('asks the host for the reader page of each template and prefers it over the drawn starter', async () => {
+    const request = vi.fn(async (_method: string, path: string) => {
+      if (path === 'layouts?kind=post') return { data: { layouts } };
+      if (path === 'layouts/full-guide?starter=1') return { data: { starter: { nodes: [], tree } } };
+
+      throw new Error('no');
+    });
+    const framePreview = vi.fn(async (key: string) => (key === 'full-guide' ? `/blog/template-preview/${key}` : null));
+    function Framed() {
+      const flow = useCreatePostFlow({ defaultTemplate: 'full-guide', framePreview });
+
+      return <>{createPostSteps(flow, { renderPreview: () => <p>drawn</p> })[0]?.render()}</>;
+    }
+    const { container } = render(
+      <GrowthProvider product="portify" request={request as never} hrefFor={(() => '#') as never} onError={vi.fn()} onNotice={vi.fn()} words={{ audiences: {}, product: 'Portify' }}>
+        <Framed />
+      </GrowthProvider>,
+    );
+
+    await waitFor(() => expect(container.querySelector('iframe[src="/blog/template-preview/full-guide"]')).toBeTruthy());
+    expect(framePreview).toHaveBeenCalledWith('news');
+  });
+
   it('asks the service for each template as a new post would start, and the host draws it on the card', async () => {
     const request = vi.fn(async (_method: string, path: string) => {
       if (path === 'layouts?kind=post') return { data: { layouts } };
