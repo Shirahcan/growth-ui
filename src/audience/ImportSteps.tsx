@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react';
 import { useGrowth } from '../GrowthProvider';
 import { FilePicker } from '../ui/FilePicker';
-import { Button, ChoiceGroup, Field, INPUT, LoadError, Notice, Pill } from '../ui/primitives';
+import { Button, Field, INPUT, LoadError, Notice, OptionCards, Pill } from '../ui/primitives';
 import type { ImportFlow } from './useImportFlow';
 
 /**
@@ -143,13 +143,13 @@ function ConsentStep({ flow, uploadProof }: { flow: ImportFlow } & ImportStepsOp
         </p>
         <p className="gr-hint">Example: a client who paid on 2025-06-01 may be asked until 2027-06-01 (two years); an enquiry from 2026-01-01 could be asked until 2026-07-01 (six months).</p>
       </Lead>
-      <ChoiceGroup
+      <OptionCards
         label="Why you may write to them"
         value={flow.mode}
         onChange={flow.setMode}
         options={[
-          { value: 'repermission', label: 'They bought or asked: ask them first' },
-          { value: 'express_written', label: 'They said yes in writing' },
+          { value: 'repermission', label: 'They bought or asked: ask them first', hint: 'We ask each one "still want to hear from us?" and keep only those still inside the legal window.' },
+          { value: 'express_written', label: 'They said yes in writing', hint: 'You keep the proof of their written yes, which you add next.' },
         ]}
       />
       {flow.mode === 'express_written' ? (

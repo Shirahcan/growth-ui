@@ -7,7 +7,7 @@ export type { GrowthTab, GrowthTabKey } from './shell/tabs';
 export { ProductPicker } from './shell/ProductPicker';
 export { DEFAULT_THEME, themeStyle } from './theme';
 export type { GrowthTheme, GrowthVariant } from './theme';
-export { Button, Card, ChoiceGroup, Dialog, Empty, Field, INPUT, Kebab, LoadError, Loading, Notice, Pill, copyText } from './ui/primitives';
+export { Button, Card, ChoiceGroup, Dialog, Empty, Field, INPUT, Kebab, LoadError, Loading, Notice, OptionCards, Pill, copyText } from './ui/primitives';
 export type { KebabItem } from './ui/primitives';
 export { GrowthPortal } from './ui/GrowthPortal';
 export { PlanIdeasView, MonthNav } from './plan/PlanIdeasView';
@@ -89,6 +89,9 @@ export type { TemplateRow, TemplateFilter, TemplatesOptions } from './templates/
 export { useNewTemplateFlow } from './templates/useNewTemplateFlow';
 export type { NewTemplateDraft, NewTemplateFlow, NewTemplateKind, NewTemplateStart, NewTemplateWords } from './templates/useNewTemplateFlow';
 export { newTemplateSteps } from './templates/NewTemplateSteps';
+// The email designer's canvas in the sent email's own colours (owner 2026-11-20).
+export { emailCanvasFrame } from './campaigns/emailCanvas';
+export type { EmailCanvas } from './campaigns/emailCanvas';
 export type { NewTemplateStep } from './templates/NewTemplateSteps';
 export type { TemplateCardsProps } from './blog/TemplateCards';
 export type { TemplatePreview } from './blog/useCreatePostFlow';

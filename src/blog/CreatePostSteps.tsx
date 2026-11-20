@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { ChoiceGroup, Field, LoadError, Loading, Notice, Refusal } from '../ui/primitives';
+import { Field, LoadError, Loading, Notice, OptionCards, Refusal } from '../ui/primitives';
 import { FilePicker } from '../ui/FilePicker';
 import { TemplateCards } from './TemplateCards';
 import type { CreatePostFlow } from './useCreatePostFlow';
@@ -71,17 +71,17 @@ function StartStep({ flow, documents }: { flow: CreatePostFlow; documents: NonNu
   return (
     <div className="gr-stack">
       <p className="gr-row-title">Do you have the post written somewhere already?</p>
-      <p className="gr-hint">
-        With a document, the designer opens with {documents.assistant}&rsquo;s console, where {documents.assistant} reads it and fills every part of
-        the template with its words, plus the title, summary and search details. Anything the document does not say is marked for a person to
-        check, so nothing is published unchecked. You see all of it in the designer before anything goes live.
-      </p>
-      <ChoiceGroup
+      <p className="gr-hint">You see all of it in the designer before anything goes live.</p>
+      <OptionCards
         label="How to start"
         value={flow.draft.start}
         options={[
-          { value: 'document', label: 'Start from a document' },
-          { value: 'template', label: 'Start with the template’s guidance' },
+          {
+            value: 'document',
+            label: 'Start from a document',
+            hint: `${documents.assistant} reads it in the designer and fills every part, plus the title, summary and search details; anything it does not say is marked for a person to check.`,
+          },
+          { value: 'template', label: 'Start with the template’s guidance', hint: 'The designer opens with every part in place, each saying what goes there.' },
         ]}
         onChange={(start) => flow.patch({ start })}
       />

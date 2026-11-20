@@ -122,6 +122,46 @@
 }
 .gr-choice-on { border-color: var(--gr-accent, #4361ee); color: var(--gr-accent, #4361ee); font-weight: 600; }
 
+/* A wizard step's 2-3 options (owner 2026-11-20): full-width cards, one per row, each with what it means. */
+.gr-option-cards { display: flex; flex-direction: column; gap: 0.625rem; }
+.gr-option-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.875rem;
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  color: var(--gr-ink, #0f172a);
+  border: 1px solid var(--gr-border, #e2e8f0);
+  border-radius: 1rem;
+  background: var(--gr-dialog-surface, #fff);
+  padding: 0.875rem 1.125rem;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+}
+.gr-option-card:hover { border-color: color-mix(in srgb, var(--gr-accent, #4361ee) 40%, var(--gr-border, #e2e8f0)); }
+.gr-option-card:focus-visible { box-shadow: 0 0 0 2px var(--gr-accent, #4361ee); }
+.gr-option-card-on {
+  border-color: var(--gr-accent, #4361ee);
+  box-shadow: 0 0 0 1px var(--gr-accent, #4361ee);
+  background: color-mix(in srgb, var(--gr-accent, #4361ee) 5%, var(--gr-dialog-surface, #fff));
+}
+.gr-option-dot {
+  flex: none;
+  margin-top: 0.1875rem;
+  width: 1.125rem;
+  height: 1.125rem;
+  border-radius: var(--gr-radius-pill, 9999px);
+  border: 2px solid #cbd5e1;
+  background: #fff;
+}
+.gr-option-card-on .gr-option-dot { border-color: var(--gr-accent, #4361ee); background: var(--gr-accent, #4361ee); box-shadow: inset 0 0 0 3px #fff; }
+.gr-option-text { display: flex; flex-direction: column; gap: 0.1875rem; min-width: 0; }
+.gr-option-title { font-size: 0.9375rem; font-weight: 600; }
+.gr-option-hint { font-size: 0.8125rem; line-height: 1.45; color: var(--gr-ink-muted, #64748b); }
+@media (prefers-reduced-motion: reduce) { .gr-option-card { transition: none; } }
+
 .gr-kebab {
   border: 0;
   background: transparent;

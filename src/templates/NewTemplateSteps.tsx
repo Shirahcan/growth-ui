@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { ChoiceGroup, Field, INPUT, Loading, Notice, Refusal } from '../ui/primitives';
+import { Field, INPUT, Loading, Notice, OptionCards, Refusal } from '../ui/primitives';
 import type { NewTemplateFlow, NewTemplateKind, NewTemplateStart, NewTemplateWords } from './useNewTemplateFlow';
 
 /**
@@ -13,21 +13,25 @@ export interface NewTemplateStep {
   render: () => ReactNode;
 }
 
-const KINDS: Array<{ value: NewTemplateKind; label: string }> = [
-  { value: 'post', label: 'A blog post template' },
-  { value: 'email', label: 'A newsletter template' },
+const KINDS: Array<{ value: NewTemplateKind; label: string; hint: string }> = [
+  { value: 'post', label: 'A blog post template', hint: 'What new blog posts start from, shown as the post page readers get.' },
+  { value: 'email', label: 'A newsletter template', hint: 'What new newsletters start from, shown as the email an inbox gets.' },
 ];
 
-const WORDS: Array<{ value: NewTemplateWords; label: string }> = [
-  { value: 'guidance', label: 'Turn its words into guidance' },
-  { value: 'keep', label: 'Keep its words as example text' },
-];
-
-function startsFor(kind: NewTemplateKind | null): Array<{ value: NewTemplateStart; label: string }> {
+function wordsFor(what: string, title: string | null): Array<{ value: NewTemplateWords; label: string; hint: string }> {
   return [
-    { value: 'blank', label: 'A blank template' },
-    { value: 'copy', label: 'A copy of a template' },
-    { value: 'item', label: kind === 'email' ? 'A newsletter you made' : 'A post you wrote' },
+    { value: 'guidance', label: 'Turn its words into guidance', hint: `Each part says what goes there instead, so every new ${what} starts clean.` },
+    { value: 'keep', label: 'Keep its words as example text', hint: `${title ? `"${title}"` : 'Its'} words stay for writers to rewrite.` },
+  ];
+}
+
+function startsFor(kind: NewTemplateKind | null): Array<{ value: NewTemplateStart; label: string; hint: string }> {
+  const what = kind === 'email' ? 'newsletter' : 'post';
+
+  return [
+    { value: 'blank', label: 'A blank template', hint: 'One part to build on in the designer.' },
+    { value: 'copy', label: 'A copy of a template', hint: 'Another template’s parts, rules and words, to change as you need.' },
+    { value: 'item', label: kind === 'email' ? 'A newsletter you made' : 'A post you wrote', hint: `That ${what}’s structure, styling and notes; next you choose what happens to its words.` },
   ];
 }
 
@@ -58,7 +62,7 @@ export function newTemplateSteps(flow: NewTemplateFlow): NewTemplateStep[] {
       render: () => (
         <div className="gr-stack">
           <p className="gr-hint">A template is the structure new posts or newsletters start from: its parts, in order, each saying what goes in it.</p>
-          <ChoiceGroup<NewTemplateKind> label="What it is for" value={draft.kind} options={KINDS} onChange={(kind) => patch({ kind, from: null, fromTitle: null })} />
+          <OptionCards<NewTemplateKind> label="What it is for" value={draft.kind} options={KINDS} onChange={(kind) => patch({ kind, from: null, fromTitle: null })} />
         </div>
       ),
     },
@@ -67,13 +71,7 @@ export function newTemplateSteps(flow: NewTemplateFlow): NewTemplateStep[] {
       title: 'Where it starts',
       validate: () => (draft.start ? null : 'Choose where the template starts.'),
       render: () => (
-        <div className="gr-stack">
-          <p className="gr-hint">
-            Blank gives you one part to build on. A copy starts with another template&apos;s parts and rules. A {what} you made gives
-            the template that {what}&apos;s structure and styling.
-          </p>
-          <ChoiceGroup<NewTemplateStart> label="Where it starts" value={draft.start} options={startsFor(draft.kind)} onChange={(start) => patch({ start, from: null, fromTitle: null, words: start === 'item' ? 'guidance' : null })} />
-        </div>
+        <OptionCards<NewTemplateStart> label="Where it starts" value={draft.start} options={startsFor(draft.kind)} onChange={(start) => patch({ start, from: null, fromTitle: null, words: start === 'item' ? 'guidance' : null })} />
       ),
     },
   ];
@@ -117,12 +115,8 @@ export function newTemplateSteps(flow: NewTemplateFlow): NewTemplateStep[] {
       validate: () => (draft.words ? null : 'Choose what happens to its words.'),
       render: () => (
         <div className="gr-stack">
-          <p className="gr-hint">
-            Its structure, styling, part order and notes always carry over. Guidance replaces each part&apos;s words with what
-            goes there, so every new {what} starts clean. Example text keeps &ldquo;{draft.fromTitle}&rdquo;&apos;s words for
-            writers to rewrite.
-          </p>
-          <ChoiceGroup<NewTemplateWords> label="Its words" value={draft.words} options={WORDS} onChange={(words) => patch({ words })} />
+          <p className="gr-hint">Its structure, styling, part order and notes always carry over.</p>
+          <OptionCards<NewTemplateWords> label="Its words" value={draft.words} options={wordsFor(what, draft.fromTitle)} onChange={(words) => patch({ words })} />
         </div>
       ),
     });

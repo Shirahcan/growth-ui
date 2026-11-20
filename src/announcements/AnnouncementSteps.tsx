@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { useGrowth } from '../GrowthProvider';
 import { TargetPicker } from '../audience/TargetPicker';
-import { Button, ChoiceGroup, Field, INPUT, Notice } from '../ui/primitives';
+import { Button, ChoiceGroup, Field, INPUT, Notice, OptionCards } from '../ui/primitives';
 import { announcementTiming } from './AnnouncementsView';
 import type { AnnouncementFlow } from './useAnnouncementFlow';
 
@@ -136,7 +136,15 @@ export function announcementSteps(flow: AnnouncementFlow, options: AnnouncementS
       render: () => (
         <div className="gr-stack">
           <Lead decides="When it starts and when it stops."><p className="gr-hint">Times are yours, in this computer&apos;s time zone. Leave the end empty to keep it up until you end it.</p></Lead>
-          <ChoiceGroup<'now' | 'later'> label="When it starts" value={d.when} options={[{ value: 'now', label: 'As soon as I publish' }, { value: 'later', label: 'At a time I choose' }]} onChange={(when) => flow.set({ when })} />
+          <OptionCards<'now' | 'later'>
+            label="When it starts"
+            value={d.when}
+            options={[
+              { value: 'now', label: 'As soon as I publish', hint: 'People see it as soon as you publish it.' },
+              { value: 'later', label: 'At a time I choose', hint: 'It waits for that time, and you can still change it until then.' },
+            ]}
+            onChange={(when) => flow.set({ when })}
+          />
           {d.when === 'later' ? <Field label="Starts">{(id) => <input id={id} type="datetime-local" className={INPUT} value={d.at} onChange={(e) => flow.set({ at: e.target.value })} />}</Field> : null}
           <Field label="Ends (optional)">{(id) => <input id={id} type="datetime-local" className={INPUT} value={d.ends} onChange={(e) => flow.set({ ends: e.target.value })} />}</Field>
         </div>

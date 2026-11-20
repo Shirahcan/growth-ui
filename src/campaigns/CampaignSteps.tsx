@@ -1,7 +1,8 @@
 import { useEffect, useRef, type ReactNode } from 'react';
 import { RichTextEditor } from '@shirahcan/ai-ui/editor';
 import { TargetPicker } from '../audience/TargetPicker';
-import { Button, ChoiceGroup, Field, INPUT, Notice } from '../ui/primitives';
+import { Button, Field, INPUT, Notice, OptionCards } from '../ui/primitives';
+import { KIND_OPTIONS } from './choices';
 import { DraftFromSubject } from './DraftFromSubject';
 import { campaignProgress } from './NewsletterView';
 import type { CampaignFlow } from './useCampaignFlow';
@@ -133,9 +134,9 @@ export function campaignSteps(flow: CampaignFlow, options: CampaignStepsOptions 
       render: () => (
         <div className="gr-stack">
           <Lead decides="Choose the kind first; the rest follows from it.">
-            <p className="gr-hint">A newsletter respects each person&apos;s pace: someone who chose every 2 weeks is not mailed twice inside that time. An alert goes the same day, only to people who asked for every update. You can change this until it goes out.</p>
+            <p className="gr-hint">You can change this until it goes out.</p>
           </Lead>
-          <ChoiceGroup<'regular' | 'alert'> label="Kind" value={d.kind} options={[{ value: 'regular', label: 'Newsletter' }, { value: 'alert', label: 'Alert' }]} onChange={(kind) => flow.set({ kind })} />
+          <OptionCards<'regular' | 'alert'> label="Kind" value={d.kind} options={KIND_OPTIONS} onChange={(kind) => flow.set({ kind })} />
         </div>
       ),
     },
@@ -213,7 +214,15 @@ export function campaignSteps(flow: CampaignFlow, options: CampaignStepsOptions 
       render: () => (
         <div className="gr-stack">
           <Lead decides="Choose when it starts sending."><p className="gr-hint">Times are yours, in this computer&apos;s time zone. A scheduled one stays editable until its time comes.</p></Lead>
-          <ChoiceGroup<'now' | 'later'> label="When" value={d.when} options={[{ value: 'now', label: 'As soon as I send it' }, { value: 'later', label: 'At a time I choose' }]} onChange={(when) => flow.set({ when })} />
+          <OptionCards<'now' | 'later'>
+            label="When"
+            value={d.when}
+            options={[
+              { value: 'now', label: 'As soon as I send it', hint: 'It starts going out when you press Send.' },
+              { value: 'later', label: 'At a time I choose', hint: 'It waits for that time, and you can still change it until then.' },
+            ]}
+            onChange={(when) => flow.set({ when })}
+          />
           {d.when === 'later' ? <Field label="Starts">{(id) => <input id={id} type="datetime-local" className={INPUT} value={d.at} onChange={(e) => flow.set({ at: e.target.value })} />}</Field> : null}
         </div>
       ),

@@ -1,7 +1,8 @@
 import type { ReactNode } from 'react';
 import { FilePick } from '../blog/CreatePostSteps';
 import { TemplateCards } from '../blog/TemplateCards';
-import { ChoiceGroup, Field, INPUT, LoadError, Loading, Notice, Refusal } from '../ui/primitives';
+import { Field, INPUT, LoadError, Loading, Notice, OptionCards, Refusal } from '../ui/primitives';
+import { KIND_OPTIONS } from './choices';
 import { SUBJECT_GUIDE, type CreateCampaignFlow } from './useCreateCampaignFlow';
 
 /**
@@ -31,17 +32,17 @@ function StartStep({ flow, documents }: { flow: CreateCampaignFlow; documents: N
   return (
     <div className="gr-stack">
       <p className="gr-row-title">Do you have it written somewhere already?</p>
-      <p className="gr-hint">
-        Your notes, a draft, an announcement: with a document, the designer opens with {documents.assistant}&rsquo;s console, where{' '}
-        {documents.assistant} reads it and fills every part of the template with its words, plus the preview text and the current figures it
-        keeps. Anything the document does not say is marked for a person to check. Nothing is sent until you press Send.
-      </p>
-      <ChoiceGroup<'document' | 'template'>
+      <p className="gr-hint">Nothing is sent until you press Send.</p>
+      <OptionCards<'document' | 'template'>
         label="How to start"
         value={flow.draft.start ?? 'template'}
         options={[
-          { value: 'document', label: 'Start from a document' },
-          { value: 'template', label: 'Start with the template’s guidance' },
+          {
+            value: 'document',
+            label: 'Start from a document',
+            hint: `Your notes, a draft, an announcement: ${documents.assistant} reads it in the designer and fills every part, plus the preview text and the current figures; anything it does not say is marked for a person to check.`,
+          },
+          { value: 'template', label: 'Start with the template’s guidance', hint: 'The designer opens with every part in place, each saying what goes there.' },
         ]}
         onChange={(start) => flow.patch({ start })}
       />
@@ -64,14 +65,11 @@ function KindStep({ flow }: { flow: CreateCampaignFlow }) {
   return (
     <div className="gr-stack">
       <p className="gr-row-title">What are you sending?</p>
-      <p className="gr-hint">
-        A newsletter respects each person&apos;s pace: someone who chose every 2 weeks is not mailed twice inside that time. An alert goes the
-        same day, only to people who asked for every update. You can change this until it goes out.
-      </p>
-      <ChoiceGroup<'regular' | 'alert'>
+      <p className="gr-hint">You can change this until it goes out.</p>
+      <OptionCards<'regular' | 'alert'>
         label="Kind"
         value={flow.draft.kind}
-        options={[{ value: 'regular', label: 'Newsletter' }, { value: 'alert', label: 'Alert' }]}
+        options={KIND_OPTIONS}
         onChange={(kind) => flow.patch({ kind })}
       />
     </div>

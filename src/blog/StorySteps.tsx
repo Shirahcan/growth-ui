@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from 'react';
 import { FilePicker } from '../ui/FilePicker';
-import { ChoiceGroup, Field, INPUT, Notice, Refusal } from '../ui/primitives';
+import { Field, INPUT, Notice, OptionCards, Refusal } from '../ui/primitives';
 import { CONSENT_METHODS } from './types';
 import { localToday, type StoryFlow } from './useStoryFlow';
 
@@ -140,7 +140,7 @@ export function storySteps(flow: StoryFlow, options: StoryStepsOptions = {}): St
         <Lead decides="Did the client agree to their story being told?">
           <p className="gr-hint">A story can only be shown with the client&apos;s consent on record. Without it you can still save a draft and add the consent later.</p>
           <Field label="How they agreed">
-            {() => <ChoiceGroup label="Consent" value={d.consent_method} options={CONSENT_METHODS} onChange={(consent_method) => flow.patch({ consent_method })} />}
+            {() => <OptionCards label="Consent" value={d.consent_method} options={CONSENT_METHODS} onChange={(consent_method) => flow.patch({ consent_method })} />}
           </Field>
           {d.consent_method ? (
             <>

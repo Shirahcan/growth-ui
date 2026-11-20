@@ -61,7 +61,7 @@ describe('creating a post', () => {
     expect(screen.getByTestId('valid').textContent).toBe('ok');
 
     fireEvent.click(screen.getByRole('radio', { name: 'Start from a document' }));
-    expect(await screen.findByText(/Porter reads it and fills every part/)).toBeTruthy();
+    expect(await screen.findByText(/Porter reads it in the designer and fills every part/)).toBeTruthy();
     expect(screen.getByLabelText('A cover photo (optional)')).toBeTruthy();
     expect(screen.getByTestId('valid').textContent).toBe('Choose the document, or start with the template’s guidance.');
 

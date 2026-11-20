@@ -97,6 +97,43 @@ export function ChoiceGroup<T extends string>({ label, value, options, onChange 
   );
 }
 
+/**
+ * A wizard step's 2-3 options as CARDS, one per row, each saying what it means (owner 2026-11-20: "wizard steps with 2-3
+ * options (radios) to choose from should present those options as cards, one per line/row"; small pills were easily
+ * missed). Pills (ChoiceGroup) stay for filters and quick toggles outside a wizard's main decision.
+ */
+export function OptionCards<T extends string>({ label, value, options, onChange }: { label: string; value: T | null; options: Array<{ value: T; label: string; hint?: string }>; onChange: (v: T) => void }) {
+  const id = useId();
+
+  return (
+    <div role="radiogroup" aria-label={label} className="gr-option-cards">
+      {options.map((o, i) => {
+        const on = value === o.value;
+
+        // Named by its title, described by its line: a screen reader says "Alert, radio button, checked" and then why.
+        return (
+          <button
+            key={o.value}
+            type="button"
+            role="radio"
+            aria-checked={on}
+            aria-labelledby={`${id}-${i}-t`}
+            aria-describedby={o.hint ? `${id}-${i}-h` : undefined}
+            onClick={() => onChange(o.value)}
+            className={`gr-option-card${on ? ' gr-option-card-on' : ''}`}
+          >
+            <span className="gr-option-dot" aria-hidden />
+            <span className="gr-option-text">
+              <span id={`${id}-${i}-t`} className="gr-option-title">{o.label}</span>
+              {o.hint ? <span id={`${id}-${i}-h`} className="gr-option-hint">{o.hint}</span> : null}
+            </span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 export interface KebabItem {
   label: string;
   onSelect: () => void;

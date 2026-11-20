@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useGrowth } from '../GrowthProvider';
 import { unwrap, type Envelope } from '../plan/types';
-import { ChoiceGroup, Field, INPUT, Pill } from '../ui/primitives';
+import { ChoiceGroup, Field, INPUT, OptionCards, Pill } from '../ui/primitives';
 import type { MailingList } from './ListsView';
 
 /**
@@ -104,11 +104,14 @@ export function TargetPicker({ value, onChange, kind = 'newsletter' }: { value: 
 
   return (
     <div className="gr-stack">
-      <ChoiceGroup<'all' | 'specific'>
+      <OptionCards<'all' | 'specific'>
         label="Who this reaches"
         value={value.mode}
         onChange={(mode) => onChange({ ...value, mode })}
-        options={[{ value: 'all', label: announcement ? `Everyone on ${words.product}` : 'Everyone subscribed' }, { value: 'specific', label: 'Only the people I pick' }]}
+        options={[
+          { value: 'all', label: announcement ? `Everyone on ${words.product}` : 'Everyone subscribed', hint: announcement ? `Every person who uses ${words.product}.` : 'Every person who can receive it, at their own pace.' },
+          { value: 'specific', label: 'Only the people I pick', hint: 'The lists, audiences, topics or people you choose below.' },
+        ]}
       />
 
       {(['include', 'exclude'] as const).map((s) =>
