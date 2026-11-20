@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { GrowthProvider } from '../src/GrowthProvider';
 import { createPostSteps, type CreatePostStepsOptions } from '../src/blog/CreatePostSteps';
 import { useCreatePostFlow } from '../src/blog/useCreatePostFlow';
-import { TemplateCards } from '../src/blog/TemplateCards';
+import { TemplateCards, stillPage } from '../src/blog/TemplateCards';
 
 /** The template picker as preview cards (owner 2026-11-17: "preview cards (similar to what MS Word does)"). */
 const layouts = [
@@ -39,11 +39,19 @@ describe('the template preview cards', () => {
       />,
     );
 
-    const frame = container.querySelector('iframe');
-    expect(frame?.getAttribute('src')).toBe('/blog/template-preview/abc');
-    expect(frame?.getAttribute('sandbox')).toBe('allow-same-origin');
-    expect((frame as HTMLIFrameElement).style.width).toBe('1440px');
+    expect(screen.getByText('Drawing the preview…')).toBeTruthy();
     expect(screen.queryByText('drawn')).toBeNull();
+    expect(container.querySelector('iframe')).toBeNull();
+  });
+
+  it('draws the reader page as a still picture: no scripts, its addresses kept', () => {
+    const page = '<html><head><link rel="stylesheet" href="/_next/a.css"><script src="/_next/x.js"></script><link rel="modulepreload" as="script" href="/_next/y.js"></head><body><h1>A clear question</h1><script>self.__next=1</script><noscript><iframe src="/tag"></iframe></noscript></body></html>';
+    const still = stillPage(page, 'http://localhost/blog/template-preview/abc');
+
+    expect(still).toContain('<h1>A clear question</h1>');
+    expect(still).toContain('<base href="http://localhost/blog/template-preview/abc">');
+    expect(still).toContain('href="/_next/a.css"');
+    expect(still).not.toMatch(/<script|<noscript|modulepreload/i);
   });
 
   it('asks the host for the reader page of each template and prefers it over the drawn starter', async () => {
@@ -65,7 +73,8 @@ describe('the template preview cards', () => {
       </GrowthProvider>,
     );
 
-    await waitFor(() => expect(container.querySelector('iframe[src="/blog/template-preview/full-guide"]')).toBeTruthy());
+    await waitFor(() => expect(framePreview).toHaveBeenCalledWith('full-guide'));
+    await waitFor(() => expect(screen.queryByText('drawn')).toBeNull());
     expect(framePreview).toHaveBeenCalledWith('news');
   });
 

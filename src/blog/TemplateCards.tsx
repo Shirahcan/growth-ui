@@ -69,8 +69,7 @@ export function TemplateCards({ templates, previews, value, onChange, renderPrev
           >
             <ScaledPage width={preview?.frame ? FRAME_WIDTH : PAGE_WIDTH}>
               {preview?.frame ? (
-                // The product's own reader page with a sample post: same-origin so its fonts load, never scripts.
-                <iframe title={`${t.name} preview`} src={preview.frame} sandbox="allow-same-origin" tabIndex={-1} loading="lazy" className="gr-template-frame" style={{ width: FRAME_WIDTH, height: FRAME_HEIGHT, border: 0, colorScheme: 'light' }} />
+                <ReaderPage src={preview.frame} title={`${t.name} preview`} />
               ) : preview === undefined ? (
                 <span className="gr-template-loading">Drawing the preview…</span>
               ) : preview && preview.tree && renderPreview ? (
@@ -99,6 +98,47 @@ export function TemplateCards({ templates, previews, value, onChange, renderPrev
       })}
     </div>
   );
+}
+
+/**
+ * The product's reader page with a sample post, as a still picture (growth templates D3): fetched once, its scripts and
+ * `<noscript>` blocks taken out and a `<base>` added so its styles, fonts and pictures still load, then drawn in a frame
+ * that may not run anything. Framing the page itself ran the whole app in every card, and a frame forbidden to run it
+ * logged a blocked script for each of its scripts (45 on one card, Loop 1 2026-11-20).
+ */
+function ReaderPage({ src, title }: { src: string; title: string }) {
+  const [html, setHtml] = useState<string | null>(null);
+
+  useEffect(() => {
+    let live = true;
+    fetch(src, { credentials: 'same-origin', headers: { Accept: 'text/html' } })
+      .then((res) => (res.ok ? res.text() : null))
+      .then((page) => {
+        if (live && page) setHtml(stillPage(page, src));
+      })
+      .catch(() => undefined);
+
+    return () => {
+      live = false;
+    };
+  }, [src]);
+
+  if (html === null) return <span className="gr-template-loading">Drawing the preview…</span>;
+
+  return <iframe title={title} srcDoc={html} sandbox="allow-same-origin" tabIndex={-1} className="gr-template-frame" style={{ width: FRAME_WIDTH, height: FRAME_HEIGHT, border: 0, colorScheme: 'light' }} />;
+}
+
+/** A page with nothing that runs, and its addresses read from where it came from. */
+export function stillPage(html: string, src: string): string {
+  const base = typeof window === 'undefined' ? src : new URL(src, window.location.href).href;
+  const still = html
+    .replace(/<script\b[\s\S]*?<\/script\s*>/gi, '')
+    .replace(/<script\b[^>]*\/>/gi, '')
+    .replace(/<noscript\b[\s\S]*?<\/noscript\s*>/gi, '')
+    .replace(/<link\b[^>]*\brel=["']?(?:modulepreload|preload)["']?[^>]*\bas=["']?script["']?[^>]*>/gi, '');
+  const tag = `<base href="${base.replace(/"/g, '&quot;')}">`;
+
+  return /<head[^>]*>/i.test(still) ? still.replace(/<head[^>]*>/i, (head) => head + tag) : tag + still;
 }
 
 /** A grey "picture goes here" box, for a template's picture the author has not chosen yet. */
