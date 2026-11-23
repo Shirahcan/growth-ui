@@ -14,11 +14,11 @@ const rows = [
   { key: 'portify-weekly', kind: 'email', name: 'Portify Weekly', version: 1, status: 'active', parts: 10, source: { kind: 'post', uuid: 'u', title: 'LMIA guide', words: 'keep' } },
 ];
 
-function mount(request: ReturnType<typeof vi.fn>, onEdit = vi.fn(), framePreview = vi.fn(async () => null), onError = vi.fn()) {
+function mount(request: ReturnType<typeof vi.fn>, onEdit = vi.fn(), framePreview = vi.fn(async () => null), onError = vi.fn(), onPreview?: ReturnType<typeof vi.fn>) {
   const notify = vi.fn();
   render(
     <GrowthProvider product="portify" request={request as never} hrefFor={(() => '#') as never} onError={onError} onNotice={notify} words={{ audiences: {}, product: 'Portify' }}>
-      <TemplatesPage onEdit={onEdit} framePreview={framePreview} />
+      <TemplatesPage onEdit={onEdit} framePreview={framePreview} onPreview={onPreview} />
     </GrowthProvider>,
   );
 
@@ -50,6 +50,17 @@ describe('the Templates page', () => {
 
     await waitFor(() => expect(asked(request, 'GET', 'layouts?status=retired')).toBe(true));
     expect(await screen.findByText(/No retired templates/)).toBeTruthy();
+  });
+
+  it('offers Preview when the host can show a template as its reader gets it (2026-11-23)', async () => {
+    const request = vi.fn(async (method: string, path: string) => (method === 'GET' && path === 'layouts' ? { data: { layouts: [rows[0]] } } : { data: { preview: {} } }));
+    const onPreview = vi.fn();
+    mount(request, vi.fn(), vi.fn(async () => null), vi.fn(), onPreview);
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Actions for Classic' }));
+    expect(screen.getAllByRole('menuitem').map((i) => i.textContent)).toEqual(['Edit', 'Preview', 'Duplicate', 'Copy key', 'Retire']);
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Preview' }));
+    expect(onPreview).toHaveBeenCalledWith(expect.objectContaining({ key: 'full-guide' }));
   });
 
   it('asks before retiring, and shows the service refusing the last template of a kind in its own words', async () => {

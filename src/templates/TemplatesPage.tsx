@@ -8,6 +8,11 @@ import { useTemplates, type TemplateFilter, type TemplateRow, type TemplatesOpti
 export interface TemplatesPageProps extends TemplatesOptions {
   /** Open a template in the host's designer. */
   onEdit: (template: TemplateRow) => void;
+  /**
+   * Show the template as its reader gets it, the way its designer's "Preview" does (owner 2026-11-23: preview belongs in
+   * the card's menu): a blog template on the product's public post page, a newsletter template as sent. Absent: no item.
+   */
+  onPreview?: (template: TemplateRow) => void;
 }
 
 const FILTERS: Array<{ value: TemplateFilter; label: string }> = [
@@ -20,10 +25,10 @@ const FILTERS: Array<{ value: TemplateFilter; label: string }> = [
 /**
  * Growth > Templates (growth templates D1, owner 2026-11-20: "admins should be able to manage (CRUD) templates"; one page
  * for blog and newsletter templates; "retire, never erase"). Each template is shown as the page a reader would get from it,
- * so the shelf of templates is a shelf of real pages. Its menu: Edit, Duplicate, Copy key, then Retire (asked first); a
- * retired one offers Restore. Making a new template is the host's "New template" action (D2).
+ * so the shelf of templates is a shelf of real pages. Its menu: Edit, Preview (the host's), Duplicate, Copy key, then
+ * Retire (asked first); a retired one offers Restore. Making a new template is the host's "New template" action (D2).
  */
-export function TemplatesPage({ onEdit, framePreview }: TemplatesPageProps) {
+export function TemplatesPage({ onEdit, onPreview, framePreview }: TemplatesPageProps) {
   const { notify, onError, canEdit } = useGrowth();
   const t = useTemplates({ framePreview });
   const [copying, setCopying] = useState<TemplateRow | null>(null);
@@ -94,6 +99,7 @@ export function TemplatesPage({ onEdit, framePreview }: TemplatesPageProps) {
                       label={`Actions for ${row.name}`}
                       items={[
                         { label: 'Edit', onSelect: () => onEdit(row) },
+                        { label: 'Preview', hidden: !onPreview, onSelect: () => onPreview?.(row) },
                         { label: 'Duplicate', hidden: retired, onSelect: () => { setCopyName(`${row.name} copy`); setRefusal(null); setCopying(row); } },
                         { label: 'Copy key', onSelect: () => void copyKey(row) },
                         { label: 'Restore', hidden: !retired, onSelect: () => void run(() => t.restore(row), `Restored "${row.name}".`) },

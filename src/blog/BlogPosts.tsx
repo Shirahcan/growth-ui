@@ -86,6 +86,15 @@ export interface BlogPostsProps {
    * that measures by address and cannot know the list in advance. Ignored when `reach` is given.
    */
   reachFor?: (posts: readonly { uuid: string; slug: string | null }[]) => Promise<Record<string, BlogPostReach>>;
+  /**
+   * The row menu's items a post's designer also offers (owner 2026-11-23: "preview, save as template, etc"), each the
+   * HOST's, since the preview page and the template flow are the product's. Absent: the item is not shown.
+   * `onPreview`: the post as a reader sees it now, draft included. `onCopyPreviewLink`: that preview's link, for a
+   * reviewer without an account. `onSaveAsTemplate`: a new template made from the post.
+   */
+  onPreview?: (post: BlogPostSummary) => void;
+  onCopyPreviewLink?: (post: BlogPostSummary) => void;
+  onSaveAsTemplate?: (post: BlogPostSummary) => void;
 }
 
 /**
@@ -96,7 +105,7 @@ export interface BlogPostsProps {
  * product's own figures, passed in by the host, because the service does not measure them. A post's address comes from
  * the service (`public_url`), never assembled here, so a product whose blog address is not set yet shows no link at all.
  */
-export function BlogPosts({ postHref, designHref, navigate, reach: given, reachFor }: BlogPostsProps) {
+export function BlogPosts({ postHref, designHref, navigate, reach: given, reachFor, onPreview, onCopyPreviewLink, onSaveAsTemplate }: BlogPostsProps) {
   const { request, notify, onError, canEdit, Link } = useGrowth();
   const [status, setStatus] = useState<StatusFilter>('all');
   const [category, setCategory] = useState<number | ''>('');
@@ -281,8 +290,11 @@ export function BlogPosts({ postHref, designHref, navigate, reach: given, reachF
                           items={[
                             { label: 'Edit', onSelect: () => navigate(postHref(post.uuid)) },
                             { label: 'Open the design', hidden: design === null, onSelect: () => design && navigate(design) },
+                            { label: 'Preview', hidden: !onPreview, onSelect: () => onPreview?.(post) },
                             { label: 'View on the blog', hidden: !post.live || !post.public_url, onSelect: () => post.public_url && window.open(post.public_url, '_blank', 'noopener,noreferrer') },
                             { label: 'Copy link', hidden: !post.public_url, onSelect: () => post.public_url && void copy(post.public_url) },
+                            { label: 'Copy preview link', hidden: !onCopyPreviewLink, onSelect: () => onCopyPreviewLink?.(post) },
+                            { label: 'Save as a template', hidden: !canEdit || !onSaveAsTemplate, onSelect: () => onSaveAsTemplate?.(post) },
                             { label: 'Unpublish', hidden: !canEdit || !post.live, onSelect: () => void unpublish(post) },
                             { label: 'Delete', danger: true, hidden: !canEdit, onSelect: () => setDeleting(post) },
                           ]}

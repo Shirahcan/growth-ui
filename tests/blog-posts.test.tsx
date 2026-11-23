@@ -127,6 +127,24 @@ describe('the blog posts list', () => {
     expect(navigate).toHaveBeenCalledWith('/admin/growth/blog/u-design/design');
   });
 
+  it('with the host’s preview and template flow, a row also offers Preview, Copy preview link and Save as a template (2026-11-23)', async () => {
+    const onPreview = vi.fn();
+    const onCopyPreviewLink = vi.fn();
+    const onSaveAsTemplate = vi.fn();
+    mount(server([live]), { onPreview, onCopyPreviewLink, onSaveAsTemplate });
+
+    fireEvent.click(await screen.findByLabelText('Actions for CRS explained'));
+    expect(screen.getAllByRole('menuitem').map((i) => i.textContent)).toEqual(['Edit', 'Preview', 'View on the blog', 'Copy link', 'Copy preview link', 'Save as a template', 'Unpublish', 'Delete']);
+    fireEvent.click(screen.getByText('Preview'));
+    expect(onPreview).toHaveBeenCalledWith(expect.objectContaining({ uuid: 'u-live' }));
+    fireEvent.click(screen.getByLabelText('Actions for CRS explained'));
+    fireEvent.click(screen.getByText('Save as a template'));
+    expect(onSaveAsTemplate).toHaveBeenCalledWith(expect.objectContaining({ uuid: 'u-live' }));
+    fireEvent.click(screen.getByLabelText('Actions for CRS explained'));
+    fireEvent.click(screen.getByText('Copy preview link'));
+    expect(onCopyPreviewLink).toHaveBeenCalledWith(expect.objectContaining({ uuid: 'u-live' }));
+  });
+
   it('a live post with no public address offers no link and says why, never a guessed address', async () => {
     mount(server([{ ...live, public_url: null }]));
 

@@ -49,7 +49,16 @@ export function campaignProgress(c: Campaign): string {
   return `${sent}${failed}. Opened by ${c.open_count.toLocaleString()}, clicked by ${c.click_count.toLocaleString()}`;
 }
 
-export function NewsletterView({ newCampaign, onEdit }: { newCampaign?: ReactNode; onEdit?: (uuid: string) => void }) {
+export function NewsletterView({
+  newCampaign,
+  onEdit,
+  onSaveAsTemplate,
+}: {
+  newCampaign?: ReactNode;
+  onEdit?: (uuid: string) => void;
+  /** A new template made from a newsletter, as its designer's "Save as a template" (the host's template flow). Absent: no item. */
+  onSaveAsTemplate?: (campaign: { uuid: string; subject: string }) => void;
+}) {
   const { request, notify, onError, canEdit } = useGrowth();
   const [items, setItems] = useState<Campaign[] | null>(null);
   const [failed, setFailed] = useState<string | null>(null);
@@ -155,6 +164,7 @@ export function NewsletterView({ newCampaign, onEdit }: { newCampaign?: ReactNod
                     { label: 'Continue editing', hidden: !canEdit || !onEdit || c.status !== 'draft', onSelect: () => onEdit?.(c.uuid) },
                     { label: 'Send a test', hidden: !canEdit, onSelect: () => { setTesting(c); setTestTo(''); setTestError(null); } },
                     { label: 'Cancel schedule', hidden: !canEdit || c.status !== 'scheduled', onSelect: () => void act('POST', `campaigns/${c.uuid}/cancel`, 'Schedule cancelled. It is a draft again.') },
+                    { label: 'Save as a template', hidden: !canEdit || !onSaveAsTemplate, onSelect: () => onSaveAsTemplate?.({ uuid: c.uuid, subject: c.subject }) },
                     { label: 'Copy reference', onSelect: () => copy(c.uuid) },
                     { label: 'Delete draft', danger: true, hidden: !canEdit || c.status !== 'draft', onSelect: () => setDeleting(c) },
                   ]}
