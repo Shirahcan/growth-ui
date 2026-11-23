@@ -131,10 +131,15 @@ describe('the blog posts list', () => {
     const onPreview = vi.fn();
     const onCopyPreviewLink = vi.fn();
     const onSaveAsTemplate = vi.fn();
-    mount(server([live]), { onPreview, onCopyPreviewLink, onSaveAsTemplate });
+    mount(server([{ ...live, body_format: 'pml' }, { ...stale, title: 'Written post' }]), { onPreview, onCopyPreviewLink, onSaveAsTemplate });
 
-    fireEvent.click(await screen.findByLabelText('Actions for CRS explained'));
-    expect(screen.getAllByRole('menuitem').map((i) => i.textContent)).toEqual(['Edit', 'Preview', 'View on the blog', 'Copy link', 'Copy preview link', 'Save as a template', 'Unpublish', 'Delete']);
+    // A written post can be previewed, but has no design to make a template from.
+    fireEvent.click(await screen.findByLabelText('Actions for Written post'));
+    expect(screen.getAllByRole('menuitem').map((i) => i.textContent)).toEqual(['Edit', 'Preview', 'View on the blog', 'Copy link', 'Copy preview link', 'Unpublish', 'Delete']);
+    fireEvent.click(screen.getByLabelText('Actions for Written post'));
+
+    fireEvent.click(screen.getByLabelText('Actions for CRS explained'));
+    expect(screen.getAllByRole('menuitem').map((i) => i.textContent)).toEqual(['Edit', 'Open the design', 'Preview', 'View on the blog', 'Copy link', 'Copy preview link', 'Save as a template', 'Unpublish', 'Delete']);
     fireEvent.click(screen.getByText('Preview'));
     expect(onPreview).toHaveBeenCalledWith(expect.objectContaining({ uuid: 'u-live' }));
     fireEvent.click(screen.getByLabelText('Actions for CRS explained'));

@@ -4,10 +4,10 @@ import { GrowthProvider, NewsletterView, campaignProgress, type Campaign } from 
 
 const hrefFor = (tab: string) => `/admin/growth/${tab}`;
 
-function mount(request: ReturnType<typeof vi.fn>, onEdit = vi.fn()) {
+function mount(request: ReturnType<typeof vi.fn>, onEdit = vi.fn(), extra: { onPreview?: ReturnType<typeof vi.fn>; onSaveAsTemplate?: ReturnType<typeof vi.fn> } = {}) {
   render(
     <GrowthProvider product="portify" request={request as never} hrefFor={hrefFor as never} onError={vi.fn()} onNotice={vi.fn()} words={{ audiences: {}, product: 'Portify' }}>
-      <NewsletterView newCampaign={<button type="button">New newsletter</button>} onEdit={onEdit} />
+      <NewsletterView newCampaign={<button type="button">New newsletter</button>} onEdit={onEdit} {...extra} />
     </GrowthProvider>,
   );
 
@@ -20,6 +20,24 @@ const base: Campaign = {
 };
 
 describe('newsletters', () => {
+  it('a designed newsletter also offers Preview and Save as a template; a written one does not (2026-11-23)', async () => {
+    const request = vi.fn(async () => ({ data: { campaigns: [{ ...base, body_format: 'pml' }, { ...base, uuid: 'c-2', subject: 'Written news', body_format: 'html' }] } }));
+    const onPreview = vi.fn();
+    const onSaveAsTemplate = vi.fn();
+    mount(request, vi.fn(), { onPreview, onSaveAsTemplate });
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Actions for November news' }));
+    expect(screen.getAllByRole('menuitem').map((i) => i.textContent)).toEqual(['Send a test', 'Preview', 'Save as a template', 'Copy reference']);
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Preview' }));
+    expect(onPreview).toHaveBeenCalledWith(expect.objectContaining({ uuid: 'c-1' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Actions for November news' }));
+    fireEvent.click(screen.getByRole('menuitem', { name: 'Save as a template' }));
+    expect(onSaveAsTemplate).toHaveBeenCalledWith(expect.objectContaining({ uuid: 'c-1' }));
+
+    fireEvent.click(screen.getByRole('button', { name: 'Actions for Written news' }));
+    expect(screen.getAllByRole('menuitem').map((i) => i.textContent)).toEqual(['Send a test', 'Copy reference']);
+  });
+
   it('lists each with what it did, filters by kind, and says why one is held', async () => {
     const request = vi.fn(async () => ({ data: { campaigns: [base, { ...base, uuid: 'c-2', kind: 'alert', subject: 'Draw tonight', status: 'scheduled', held_reason: 'This product has not set a daily sending cap, so nothing goes yet.', sent_count: 0, open_count: 0, click_count: 0, failed_count: 0, scheduled_at: '2026-11-20T15:00:00Z' }] } }));
     mount(request);

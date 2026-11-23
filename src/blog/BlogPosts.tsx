@@ -90,7 +90,8 @@ export interface BlogPostsProps {
    * The row menu's items a post's designer also offers (owner 2026-11-23: "preview, save as template, etc"), each the
    * HOST's, since the preview page and the template flow are the product's. Absent: the item is not shown.
    * `onPreview`: the post as a reader sees it now, draft included. `onCopyPreviewLink`: that preview's link, for a
-   * reviewer without an account. `onSaveAsTemplate`: a new template made from the post.
+   * reviewer without an account. `onSaveAsTemplate`: a new template made from the post, offered only for a designed post
+   * (a written one has no structure to make a template from).
    */
   onPreview?: (post: BlogPostSummary) => void;
   onCopyPreviewLink?: (post: BlogPostSummary) => void;
@@ -294,7 +295,7 @@ export function BlogPosts({ postHref, designHref, navigate, reach: given, reachF
                             { label: 'View on the blog', hidden: !post.live || !post.public_url, onSelect: () => post.public_url && window.open(post.public_url, '_blank', 'noopener,noreferrer') },
                             { label: 'Copy link', hidden: !post.public_url, onSelect: () => post.public_url && void copy(post.public_url) },
                             { label: 'Copy preview link', hidden: !onCopyPreviewLink, onSelect: () => onCopyPreviewLink?.(post) },
-                            { label: 'Save as a template', hidden: !canEdit || !onSaveAsTemplate, onSelect: () => onSaveAsTemplate?.(post) },
+                            { label: 'Save as a template', hidden: !canEdit || !onSaveAsTemplate || post.body_format !== 'pml', onSelect: () => onSaveAsTemplate?.(post) },
                             { label: 'Unpublish', hidden: !canEdit || !post.live, onSelect: () => void unpublish(post) },
                             { label: 'Delete', danger: true, hidden: !canEdit, onSelect: () => setDeleting(post) },
                           ]}
