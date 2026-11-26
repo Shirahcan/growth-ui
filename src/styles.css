@@ -557,3 +557,7 @@ a.gr-button { text-decoration: none; }
 .gr-shape-table { height: 140px; background: repeating-linear-gradient(#f1f5f9 0 34px, #e2e8f0 34px 36px) !important; }
 .gr-shape-cta { height: 120px; border-top: 8px solid #a5b4fc; background: #f8fafc !important; border: 2px solid #e2e8f0; }
 @media (prefers-reduced-motion: reduce) { .gr-template-card { transition: none; } }
+
+/* Landing pages (G7b5a): a link-styled button, and a keyword link's address on one line. */
+button.gr-table-link { background: none; border: 0; padding: 0; font: inherit; cursor: pointer; }
+.gr-code-line { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.75rem; color: var(--gr-ink-muted, #64748b); }

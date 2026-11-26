@@ -121,3 +121,8 @@ export type { GuestReadingStore, ReadEntry } from './blog/reading/guestStore';
 export { ResultsView, RESULTS_PERIODS } from './results/ResultsView';
 export type { ResultsViewProps } from './results/ResultsView';
 export type { ResultsData, ResultsPeriod } from './results/types';
+export { LandingPagesView } from './landing/LandingPagesView';
+export type { LandingPagesViewProps } from './landing/LandingPagesView';
+export { KeywordLinksView } from './landing/KeywordLinksView';
+export type { KeywordLinksViewProps } from './landing/KeywordLinksView';
+export type { LandingPage, KeywordLink } from './landing/types';
