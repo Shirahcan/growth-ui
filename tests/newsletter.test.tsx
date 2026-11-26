@@ -38,6 +38,19 @@ describe('newsletters', () => {
     expect(screen.getAllByRole('menuitem').map((i) => i.textContent)).toEqual(['Send a test', 'Copy reference']);
   });
 
+  it('the title opens the newsletter: a draft to edit, a designed sent one to preview (2026-11-26: only the menu reached it)', async () => {
+    const request = vi.fn(async () => ({ data: { campaigns: [{ ...base, uuid: 'd-1', subject: 'Draft news', status: 'draft', sent_count: 0 }, { ...base, body_format: 'pml' }, { ...base, uuid: 'c-2', subject: 'Written news', body_format: 'html' }] } }));
+    const onPreview = vi.fn();
+    const onEdit = mount(request, vi.fn(), { onPreview });
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Continue editing Draft news' }));
+    expect(onEdit).toHaveBeenCalledWith('d-1');
+    fireEvent.click(screen.getByRole('button', { name: 'Preview November news' }));
+    expect(onPreview).toHaveBeenCalledWith(expect.objectContaining({ uuid: 'c-1' }));
+    expect(screen.queryByRole('button', { name: 'Preview Written news' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Continue editing Written news' })).toBeNull();
+  });
+
   it('lists each with what it did, filters by kind, and says why one is held', async () => {
     const request = vi.fn(async () => ({ data: { campaigns: [base, { ...base, uuid: 'c-2', kind: 'alert', subject: 'Draw tonight', status: 'scheduled', held_reason: 'This product has not set a daily sending cap, so nothing goes yet.', sent_count: 0, open_count: 0, click_count: 0, failed_count: 0, scheduled_at: '2026-11-20T15:00:00Z' }] } }));
     mount(request);

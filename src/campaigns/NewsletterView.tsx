@@ -161,7 +161,19 @@ export function NewsletterView({
             {shown.map((c) => (
               <li key={c.uuid} className="gr-list-row">
                 <div className="gr-grow">
-                  <p className="gr-row-title">{c.subject}</p>
+                  {/* The title opens the newsletter, as its menu does (2026-11-26: only the kebab reached it): a draft to
+                      edit, anything else to read when it has a preview. */}
+                  {canEdit && onEdit && c.status === 'draft' ? (
+                    <button type="button" className="gr-row-button" onClick={() => onEdit(c.uuid)} aria-label={`Continue editing ${c.subject}`}>
+                      <span className="gr-row-title">{c.subject}</span>
+                    </button>
+                  ) : onPreview && c.body_format === 'pml' ? (
+                    <button type="button" className="gr-row-button" onClick={() => onPreview(c)} aria-label={`Preview ${c.subject}`}>
+                      <span className="gr-row-title">{c.subject}</span>
+                    </button>
+                  ) : (
+                    <p className="gr-row-title">{c.subject}</p>
+                  )}
                   <div className="gr-pills">
                     <Pill tone={c.held_reason ? 'bad' : STATE[c.status].tone}>{c.held_reason ? 'Held' : STATE[c.status].words}</Pill>
                     {c.kind === 'alert' ? <Pill tone="accent">Alert</Pill> : null}
