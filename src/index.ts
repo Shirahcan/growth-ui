@@ -118,3 +118,6 @@ export { RememberReading, DEFAULT_REMEMBER_READING_WORDS } from './blog/reading/
 export type { PickedPost, ReadingHistoryPorts, RememberReadingProps, RememberReadingWords } from './blog/reading/RememberReading';
 export { guestReadingStore, useGuestReading } from './blog/reading/guestStore';
 export type { GuestReadingStore, ReadEntry } from './blog/reading/guestStore';
+export { ResultsView, RESULTS_PERIODS } from './results/ResultsView';
+export type { ResultsViewProps } from './results/ResultsView';
+export type { ResultsData, ResultsPeriod } from './results/types';
