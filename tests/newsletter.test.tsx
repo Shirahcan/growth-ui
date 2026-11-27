@@ -51,6 +51,15 @@ describe('newsletters', () => {
     expect(screen.queryByRole('button', { name: 'Continue editing Written news' })).toBeNull();
   });
 
+  it('says how a subject-line test stands, and which subject won (G5e)', async () => {
+    const decided = { ...base, subject_b: 'What changed in November', subject_test: { phase: 'decided' as const, winner: 'b' as const, rates: { a: { sent: 12, clicked: 1, rate: 0.0833 }, b: { sent: 12, clicked: 3, rate: 0.25 } } } };
+    const waiting = { ...base, uuid: 'c-2', subject: 'Draw tonight', status: 'sending' as const, subject_b: 'Tonight: a new draw', subject_test: { phase: 'waiting' as const, wait_hours: 4 } };
+    mount(vi.fn(async () => ({ data: { campaigns: [decided, waiting] } })));
+
+    expect(await screen.findByText('"What changed in November" won: 8.3% clicked subject A, 25% clicked subject B. Everyone else got the winner.')).toBeTruthy();
+    expect(screen.getByText('Testing two subjects: the winner is picked 4 hours after the test sends.')).toBeTruthy();
+  });
+
   it('lists each with what it did, filters by kind, and says why one is held', async () => {
     const request = vi.fn(async () => ({ data: { campaigns: [base, { ...base, uuid: 'c-2', kind: 'alert', subject: 'Draw tonight', status: 'scheduled', held_reason: 'This product has not set a daily sending cap, so nothing goes yet.', sent_count: 0, open_count: 0, click_count: 0, failed_count: 0, scheduled_at: '2026-11-20T15:00:00Z' }] } }));
     mount(request);

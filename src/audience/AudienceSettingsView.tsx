@@ -57,6 +57,9 @@ export function AudienceSettingsView() {
         ...(draft.regular_gap_days !== null ? { regular_gap_days: draft.regular_gap_days } : {}),
         ...(draft.import_purge_days !== null ? { import_purge_days: draft.import_purge_days } : {}),
         lapse_warning_days: draft.lapse_warning_days,
+        ...(draft.subject_test_split_percent ? { subject_test_split_percent: draft.subject_test_split_percent } : {}),
+        ...(draft.subject_test_wait_hours ? { subject_test_wait_hours: draft.subject_test_wait_hours } : {}),
+        ...(draft.subject_test_min_audience ? { subject_test_min_audience: draft.subject_test_min_audience } : {}),
       });
       setDraft(unwrap(res).audience);
       notify('Audience settings saved.');
@@ -101,6 +104,18 @@ export function AudienceSettingsView() {
           </Field>
           <Field label="Warn before consent runs out (days)" hint="How far ahead the Audience page warns you. Example: 30.">
             {(id) => <input id={id} type="number" min={1} max={180} className={INPUT} value={draft.lapse_warning_days} onChange={(e) => setDraft({ ...draft, lapse_warning_days: number(e.target.value) ?? 30 })} disabled={!canEdit} />}
+          </Field>
+        </div>
+
+        <div className="gr-settings-block gr-grid-3">
+          <Field label="Subject test: share per subject (%)" hint="When a newsletter tests two subjects, each goes to this share of the audience first. Example: 10.">
+            {(id) => <input id={id} type="number" min={1} max={45} className={INPUT} value={draft.subject_test_split_percent ?? ''} onChange={(e) => setDraft({ ...draft, subject_test_split_percent: number(e.target.value) ?? undefined })} disabled={!canEdit} />}
+          </Field>
+          <Field label="Subject test: wait before the winner (hours)" hint="How long the clicks are counted before the winning subject goes to everyone else. Example: 4.">
+            {(id) => <input id={id} type="number" min={1} max={72} className={INPUT} value={draft.subject_test_wait_hours ?? ''} onChange={(e) => setDraft({ ...draft, subject_test_wait_hours: number(e.target.value) ?? undefined })} disabled={!canEdit} />}
+          </Field>
+          <Field label="Subject test: smallest audience" hint="Below this many people a test picks a winner by luck, so the send waits and says why. Example: 200.">
+            {(id) => <input id={id} type="number" min={2} className={INPUT} value={draft.subject_test_min_audience ?? ''} onChange={(e) => setDraft({ ...draft, subject_test_min_audience: number(e.target.value) ?? undefined })} disabled={!canEdit} />}
           </Field>
         </div>
 

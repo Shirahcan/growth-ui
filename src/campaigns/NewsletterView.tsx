@@ -27,6 +27,31 @@ export interface Campaign {
   created_at: string | null;
   /** How its body is written: `pml` = designed (it can be previewed as sent and made into a template); `html` = written. */
   body_format?: 'pml' | 'html';
+  /** A second subject: the campaign tests the two (G5e). */
+  subject_b?: string | null;
+  /** How the subject test stands: testing, waiting for the clicks, or decided (with the winner and each click rate). */
+  subject_test?: SubjectTestState | null;
+}
+
+export interface SubjectTestState {
+  phase: 'testing' | 'waiting' | 'decided';
+  split_percent?: number;
+  wait_hours?: number;
+  winner?: 'a' | 'b';
+  rates?: Record<'a' | 'b', { sent: number; clicked: number; rate: number }>;
+}
+
+/** The subject test in plain words, for the list; null when the campaign has one subject. */
+export function subjectTestWords(c: Campaign): string | null {
+  const t = c.subject_test;
+  if (!c.subject_b) return null;
+  if (!t) return `Tests two subjects: "${c.subject}" and "${c.subject_b}".`;
+  if (t.phase === 'testing') return `Testing two subjects on ${t.split_percent ?? 10}% of the audience each.`;
+  if (t.phase === 'waiting') return `Testing two subjects: the winner is picked ${t.wait_hours ?? 4} hours after the test sends.`;
+  const pct = (v: 'a' | 'b') => `${Math.round((t.rates?.[v]?.rate ?? 0) * 1000) / 10}%`;
+  const won = t.winner === 'b' ? c.subject_b : c.subject;
+
+  return `"${won}" won: ${pct('a')} clicked subject A, ${pct('b')} clicked subject B. Everyone else got the winner.`;
 }
 
 type Filter = 'all' | 'regular' | 'alert';
@@ -179,6 +204,7 @@ export function NewsletterView({
                     {c.kind === 'alert' ? <Pill tone="accent">Alert</Pill> : null}
                     <span className="gr-hint">{campaignProgress(c)}</span>
                   </div>
+                  {subjectTestWords(c) ? <p className="gr-hint">{subjectTestWords(c)}</p> : null}
                   {c.held_reason ? <p className="gr-hint">Held: {c.held_reason}</p> : null}
                 </div>
                 <Kebab

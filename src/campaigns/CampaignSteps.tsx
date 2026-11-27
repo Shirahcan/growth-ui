@@ -108,6 +108,7 @@ function Review({ flow, options }: { flow: CampaignFlow; options: CampaignStepsO
       </Lead>
       <ul className="gr-list">
         <li className="gr-hint"><strong>{d.subject}</strong></li>
+        {d.testSubjects && d.kind !== 'alert' && d.subjectB.trim() !== '' ? <li className="gr-hint">Tested against: <strong>{d.subjectB}</strong>. The one more people click goes to everyone else.</li> : null}
         {d.preheader ? <li className="gr-hint">Preview text: {d.preheader}</li> : null}
         <li className="gr-hint">What: {d.kind === 'alert' ? 'an alert' : 'a newsletter'}{topic ? `, about ${topic}` : ''}</li>
         <li className="gr-hint">Who: {flow.reach === null ? 'still counting' : `${flow.reach.toLocaleString()} ${flow.reach === 1 ? 'person' : 'people'} today`}</li>
@@ -165,13 +166,30 @@ export function campaignSteps(flow: CampaignFlow, options: CampaignStepsOptions 
     },
     {
       id: 'content', title: 'What goes in it',
-      validate: () => (d.subject.trim() === '' ? 'Write a subject line.' : textOf(d.bodyHtml).length < 20 ? 'Write the email (at least a couple of sentences).' : null),
+      validate: () => (d.subject.trim() === ''
+        ? 'Write a subject line.'
+        : d.testSubjects && d.subjectB.trim() === ''
+          ? 'Write the second subject, or turn the test off.'
+          : d.testSubjects && d.subjectB.trim().toLowerCase() === d.subject.trim().toLowerCase()
+            ? 'The two subjects are the same. Change one, or turn the test off.'
+            : textOf(d.bodyHtml).length < 20 ? 'Write the email (at least a couple of sentences).' : null),
       render: () => (
         <div className="gr-stack">
           <Lead decides="Write the subject and the email.">
             <p className="gr-hint">Example subject: Express Entry draw: 2,500 invitations at CRS 520. Nothing is sent from this step.</p>
           </Lead>
           <Field label="Subject">{(id) => <input id={id} className={INPUT} maxLength={255} value={d.subject} onChange={(e) => flow.set({ subject: e.target.value })} />}</Field>
+          {d.kind === 'alert' ? null : (
+            <label className="gr-hint" style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-start' }}>
+              <input type="checkbox" checked={d.testSubjects} onChange={(e) => flow.set({ testSubjects: e.target.checked })} />
+              <span>Test two subjects. Each goes to a small share of the audience first; after a few hours, the one more people click goes to everyone else. Nobody gets both. It needs a large enough audience, or the send waits and says why.</span>
+            </label>
+          )}
+          {d.kind !== 'alert' && d.testSubjects ? (
+            <Field label="Second subject" hint="Change one thing, so the result tells you something: the opening words, a number, a question.">
+              {(id) => <input id={id} className={INPUT} maxLength={255} value={d.subjectB} onChange={(e) => flow.set({ subjectB: e.target.value })} />}
+            </Field>
+          ) : null}
           <Field label="Preview text (optional)" hint="Shown next to the subject in most inboxes.">
             {(id) => <input id={id} className={INPUT} maxLength={255} value={d.preheader} onChange={(e) => flow.set({ preheader: e.target.value })} />}
           </Field>

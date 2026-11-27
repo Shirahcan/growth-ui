@@ -27,6 +27,9 @@ export interface CampaignDraft {
   /** The one topic it is about ('' = none): only people who chose it, or chose none, receive it. */
   topic: string;
   subject: string;
+  /** Test a second subject (G5e): each goes to a small share first, the one more people click goes to the rest. */
+  testSubjects: boolean;
+  subjectB: string;
   preheader: string;
   bodyHtml: string;
   when: 'now' | 'later';
@@ -64,7 +67,7 @@ export interface CampaignFlow {
 }
 
 const BLANK: CampaignDraft = {
-  kind: 'regular', target: { mode: 'all', include: [], exclude: [] }, topic: '', subject: '', preheader: '', bodyHtml: '', when: 'now', at: '', campaignUuid: null,
+  kind: 'regular', target: { mode: 'all', include: [], exclude: [] }, topic: '', subject: '', testSubjects: false, subjectB: '', preheader: '', bodyHtml: '', when: 'now', at: '', campaignUuid: null,
 };
 
 interface Stored extends Campaign { body_html?: string; target?: Target | null }
@@ -96,7 +99,7 @@ export function useCampaignFlow(uuid: string | null = null): CampaignFlow {
         .then((res) => {
           if (!live) return;
           const c = unwrap(res).campaign;
-          setDraft({ ...BLANK, kind: c.kind, subject: c.subject ?? '', preheader: c.preheader ?? '', bodyHtml: c.body_html ?? '', topic: c.topic ?? '', target: c.target ?? BLANK.target, campaignUuid: c.uuid });
+          setDraft({ ...BLANK, kind: c.kind, subject: c.subject ?? '', testSubjects: Boolean(c.subject_b), subjectB: c.subject_b ?? '', preheader: c.preheader ?? '', bodyHtml: c.body_html ?? '', topic: c.topic ?? '', target: c.target ?? BLANK.target, campaignUuid: c.uuid });
           setLoading(false);
         })
         .catch((e) => {
@@ -136,7 +139,7 @@ export function useCampaignFlow(uuid: string | null = null): CampaignFlow {
     setRefusal(null);
     setEdits((n) => n + 1);
     if ('kind' in patch || 'topic' in patch || 'target' in patch) setReach(null);
-    if ('kind' in patch || 'topic' in patch || 'target' in patch || 'subject' in patch || 'bodyHtml' in patch) setChecks(null);
+    if ('kind' in patch || 'topic' in patch || 'target' in patch || 'subject' in patch || 'subjectB' in patch || 'testSubjects' in patch || 'bodyHtml' in patch) setChecks(null);
     setDraft((d) => ({ ...d, ...patch }));
   }, []);
 
@@ -149,7 +152,7 @@ export function useCampaignFlow(uuid: string | null = null): CampaignFlow {
     setSaving(true);
     try {
       const body = {
-        kind: draft.kind, subject: draft.subject.trim(), preheader: draft.preheader.trim() || null, body_html: draft.bodyHtml,
+        kind: draft.kind, subject: draft.subject.trim(), subject_b: draft.testSubjects && draft.subjectB.trim() !== '' ? draft.subjectB.trim() : null, preheader: draft.preheader.trim() || null, body_html: draft.bodyHtml,
         topic: draft.topic || null, target: draft.target,
       };
       const create = async () => {

@@ -100,6 +100,36 @@ describe('campaignSteps', () => {
     expect(calls.some((c) => c[1] === 'campaigns/c-9/send')).toBe(true);
   });
 
+  it('a newsletter can test two subjects: the second is asked for, must differ, and is saved with the draft (G5e)', async () => {
+    const calls = mount(service());
+
+    fireEvent.click(await screen.findByRole('radio', { name: 'Newsletter' }));
+    await next();
+    await next();
+    fireEvent.change(screen.getByLabelText('Subject'), { target: { value: 'November news' } });
+    fireEvent.change(screen.getByLabelText('The email body'), { target: { value: '<p>What changed this month for families applying together.</p>' } });
+    fireEvent.click(screen.getByRole('checkbox', { name: /Test two subjects/ }));
+    await next();
+    expect(screen.getByRole('alert').textContent).toBe('Write the second subject, or turn the test off.');
+    fireEvent.change(screen.getByLabelText('Second subject'), { target: { value: 'november NEWS' } });
+    await next();
+    expect(screen.getByRole('alert').textContent).toBe('The two subjects are the same. Change one, or turn the test off.');
+    fireEvent.change(screen.getByLabelText('Second subject'), { target: { value: 'What changed in November' } });
+    await next();
+
+    await screen.findByText('It goes from news@portify.example.');
+    expect(calls.find((c) => c[0] === 'POST' && c[1] === 'campaigns')?.[2]).toMatchObject({ subject: 'November news', subject_b: 'What changed in November' });
+  });
+
+  it('an alert never offers the subject test', async () => {
+    mount(service());
+
+    fireEvent.click(await screen.findByRole('radio', { name: 'Alert' }));
+    await next();
+    await next();
+    expect(screen.queryByRole('checkbox', { name: /Test two subjects/ })).toBeNull();
+  });
+
   it('a red check stops the wizard and says why', async () => {
     mount(service([{ key: 'casl_footer', label: 'A postal address in the footer', pass: false, blocking: true, detail: 'Add Portify’s mailing address in Settings first.' }]));
 

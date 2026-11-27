@@ -65,4 +65,8 @@ export interface AudienceSettings {
   regular_gap_days: number | null;
   import_purge_days: number | null;
   lapse_warning_days: number;
+  /** A subject-line test (G5e): each subject's share of the audience (%), the wait before the winner (hours), the smallest audience it runs on. */
+  subject_test_split_percent?: number;
+  subject_test_wait_hours?: number;
+  subject_test_min_audience?: number;
 }
