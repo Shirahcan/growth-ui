@@ -291,7 +291,7 @@ function Review({ flow, options, address }: { flow: LandingFlow; options: Landin
       <p className="gr-row-title">{flow.editing ? 'Check your changes' : 'Check your page'}</p>
       <p className="gr-hint">
         {d.layout === 'pml'
-          ? 'This saves the sign-up details and opens the designer. Add the sign-up form there, then publish it from Landing pages.'
+          ? 'This saves the sign-up details and opens the designer. Add the sign-up form there, then publish the page from the designer.'
           : flow.editing
             ? options.pageStatus === 'live'
               ? 'Changes to a live page show as soon as you save.'
@@ -326,7 +326,13 @@ function Review({ flow, options, address }: { flow: LandingFlow; options: Landin
       {flow.refusal ? <Notice>{flow.refusal}</Notice> : null}
       {flow.done ? (
         <p className="gr-row-title" role="status">
-          {flow.done.status === 'live' ? `Published. Anyone with the link can open ${address(flow.done.slug)}.` : flow.editing ? 'Saved.' : 'Saved as a draft. Publish it from Landing pages when you are ready.'}
+          {flow.done.status === 'live'
+            ? `Published. Anyone with the link can open ${address(flow.done.slug)}.`
+            : d.layout === 'pml'
+              ? 'Saved. Opening the designer.'
+              : flow.editing
+                ? 'Saved.'
+                : 'Saved as a draft. Publish it from Landing pages when you are ready.'}
         </p>
       ) : null}
       {options.hostSubmits || flow.done ? null : (
