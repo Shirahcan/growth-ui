@@ -44,7 +44,8 @@ export { announcementSteps, verbFor as announcementVerb } from './announcements/
 export type { AnnouncementStep, AnnouncementStepsOptions } from './announcements/AnnouncementSteps';
 export { useAnnouncementFlow, bodyHtml as announcementBodyHtml } from './announcements/useAnnouncementFlow';
 export type { AnnouncementDraft, AnnouncementFlow } from './announcements/useAnnouncementFlow';
-export { NewsletterView, campaignProgress } from './campaigns/NewsletterView';
+export { NewsletterView, campaignProgress, subjectTestWords, type SubjectTestState } from './campaigns/NewsletterView';
+export { SubjectTestSettingsView } from './campaigns/SubjectTestSettingsView';
 export type { Campaign } from './campaigns/NewsletterView';
 export { campaignSteps, campaignVerb } from './campaigns/CampaignSteps';
 export type { CampaignStep, CampaignStepsOptions } from './campaigns/CampaignSteps';
