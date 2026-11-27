@@ -18,6 +18,9 @@ export interface CreateCampaignDraft {
   kind: 'regular' | 'alert';
   layout_key: string | null;
   subject: string;
+  /** Test a second subject (G5e, 0.33.1): each goes to a few people first, the one clicked more goes to the rest. */
+  testSubjects?: boolean;
+  subjectB?: string;
   /**
    * "document": the assistant prepares the newsletter from a file in the designer's console (0.24.0, N1h-5); "template":
    * it opens with the template's guidance. A draft saved before 0.24.0 has none, which reads as "template".
@@ -140,6 +143,7 @@ export function useCreateCampaignFlow(options: CreateCampaignFlowOptions = {}): 
       const res = await request<Envelope<{ campaign: CreatedCampaign }>>('POST', 'campaigns', {
         kind: draft.kind,
         subject,
+        ...(draft.kind !== 'alert' && draft.testSubjects && (draft.subjectB ?? '').trim() !== '' ? { subject_b: (draft.subjectB ?? '').trim() } : {}),
         layout_key: draft.layout_key,
       });
 
@@ -153,7 +157,7 @@ export function useCreateCampaignFlow(options: CreateCampaignFlowOptions = {}): 
     } finally {
       setCreating(false);
     }
-  }, [request, onError, draft.kind, subject, draft.layout_key]);
+  }, [request, onError, draft.kind, subject, draft.layout_key, draft.testSubjects, draft.subjectB]);
 
   return { draft, patch, document, setDocument, templates, previews, loadError, reload: () => setReloadKey((k) => k + 1), creating, refusal, create };
 }

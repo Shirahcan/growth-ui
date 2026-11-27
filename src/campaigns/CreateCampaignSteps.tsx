@@ -122,6 +122,17 @@ function SubjectStep({ flow, assistant }: { flow: CreateCampaignFlow; assistant:
       >
         {(id) => <input id={id} className={INPUT} maxLength={255} value={flow.draft.subject} onChange={(e) => flow.patch({ subject: e.target.value })} />}
       </Field>
+      {flow.draft.kind === 'alert' ? null : (
+        <label className="gr-hint" style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-start' }}>
+          <input type="checkbox" checked={flow.draft.testSubjects === true} onChange={(e) => flow.patch({ testSubjects: e.target.checked })} />
+          <span>Test two subjects. Each goes to a small share of the audience first; after a few hours, the one more people click goes to everyone else. Nobody gets both. It needs a large enough audience, or the send waits and says why.</span>
+        </label>
+      )}
+      {flow.draft.kind !== 'alert' && flow.draft.testSubjects ? (
+        <Field label="Second subject" hint="Change one thing, so the result tells you something: the opening words, a number, a question. You can change it in the designer's Details.">
+          {(id) => <input id={id} className={INPUT} maxLength={255} value={flow.draft.subjectB ?? ''} onChange={(e) => flow.patch({ subjectB: e.target.value })} />}
+        </Field>
+      ) : null}
       <Refusal message={flow.refusal} />
     </div>
   );
@@ -158,7 +169,14 @@ export function createCampaignSteps(flow: CreateCampaignFlow, options: CreateCam
   steps.push({
     id: 'subject',
     title: 'The subject line',
-    validate: () => (flow.draft.subject.trim() === '' ? 'Write a subject line.' : null),
+    validate: () => {
+      if (flow.draft.subject.trim() === '') return 'Write a subject line.';
+      if (flow.draft.kind === 'alert' || !flow.draft.testSubjects) return null;
+      const b = (flow.draft.subjectB ?? '').trim();
+      if (b === '') return 'Write the second subject, or turn the test off.';
+
+      return b.toLowerCase() === flow.draft.subject.trim().toLowerCase() ? 'The two subjects are the same. Change one, or turn the test off.' : null;
+    },
     render: () => <SubjectStep flow={flow} assistant={documents?.assistant ?? 'The assistant'} />,
   });
 

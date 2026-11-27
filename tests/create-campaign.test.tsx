@@ -103,6 +103,24 @@ describe('creating a newsletter', () => {
     expect(created).toMatchObject({ uuid: 'c-1', body_format: 'pml', layout_key: 'portify-weekly' });
   });
 
+  it('a newsletter can test two subjects: the second must be written and differ, and is created with the draft (G5e)', async () => {
+    const request = service();
+    const flow = mount(request, 2, 'portify-weekly');
+    fireEvent.change(await screen.findByLabelText('Subject'), { target: { value: 'November news' } });
+    fireEvent.click(screen.getByRole('checkbox', { name: /Test two subjects/ }));
+
+    expect(screen.getByTestId('valid').textContent).toBe('Write the second subject, or turn the test off.');
+    fireEvent.change(screen.getByLabelText('Second subject'), { target: { value: 'NOVEMBER news' } });
+    expect(screen.getByTestId('valid').textContent).toBe('The two subjects are the same. Change one, or turn the test off.');
+    fireEvent.change(screen.getByLabelText('Second subject'), { target: { value: 'What changed in November' } });
+    expect(screen.getByTestId('valid').textContent).toBe('ok');
+
+    await act(async () => {
+      await flow().create();
+    });
+    expect(request).toHaveBeenLastCalledWith('POST', 'campaigns', { kind: 'regular', subject: 'November news', subject_b: 'What changed in November', layout_key: 'portify-weekly' });
+  });
+
   it('shows the service’s refusal on the step, and nothing else is an error the step swallows', async () => {
     const refused = Object.assign(new Error('422'), { response: { status: 422, data: { message: 'That template is switched off.', errors: { layout_key: ['That template is switched off.'] } } } });
     const onError = vi.fn();
