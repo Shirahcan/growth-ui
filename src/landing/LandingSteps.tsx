@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { useGrowth } from '../GrowthProvider';
 import { Button, Field, INPUT, Notice, OptionCards } from '../ui/primitives';
-import { slugify, type LandingDraft, type LandingFlow } from './useLandingFlow';
+import { slugify, slugTyping, type LandingDraft, type LandingFlow } from './useLandingFlow';
 
 /**
  * A landing page's steps (shared program G7b5b; source: Portify's landing wizard), for the HOST's wizard shell, as
@@ -235,7 +235,7 @@ function Basics({ flow, address }: { flow: LandingFlow; address: (slug: string) 
           {(id) => <input id={id} className={INPUT} value={d.name} placeholder="PR checklist" onChange={(e) => flow.set(d.slugTouched ? { name: e.target.value } : { name: e.target.value, slug: slugify(e.target.value) })} />}
         </Field>
         <Field label="Address" hint={`Visitors open ${address(d.slug)}`}>
-          {(id) => <input id={id} className={INPUT} value={d.slug} placeholder="pr-checklist" onChange={(e) => flow.set({ slug: slugify(e.target.value), slugTouched: true })} />}
+          {(id) => <input id={id} className={INPUT} value={d.slug} placeholder="pr-checklist" onChange={(e) => flow.set({ slug: slugTyping(e.target.value), slugTouched: true })} onBlur={() => flow.set({ slug: slugify(d.slug) })} />}
         </Field>
       </div>
       <OptionCards label="Who these people are" value={d.audience || null} onChange={(audience) => flow.set({ audience })} options={audiences} />

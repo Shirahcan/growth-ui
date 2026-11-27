@@ -54,6 +54,19 @@ describe('the landing page steps', () => {
     expect(landingSteps(flow, OPTIONS).find((s) => s.id === 'exposure')!.validate()).toBe('Choose who can find this page.');
   });
 
+  it('an address typed a key at a time keeps its hyphens, and is tidied when the field is left', () => {
+    mount(vi.fn(), { options: OPTIONS });
+    const address = screen.getByLabelText('Address') as HTMLInputElement;
+    let typed = '';
+    for (const key of 'PR-Checklist--') {
+      typed = address.value + key;
+      fireEvent.change(address, { target: { value: typed } });
+    }
+    expect(address.value).toBe('pr-checklist-');
+    fireEvent.blur(address);
+    expect(address.value).toBe('pr-checklist');
+  });
+
   it('saves, sends the PDF through the host, then publishes, in that order', async () => {
     const order: string[] = [];
     const request = vi.fn(async (method: string, path: string) => {

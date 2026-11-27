@@ -61,6 +61,9 @@ export interface LandingFlowOptions {
 
 export const slugify = (v: string) => v.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 120);
 
+/** The address as it is being TYPED: cleaned, but a trailing hyphen stays, or no hyphen could ever be typed. {@link slugify} finishes it on blur and on save. */
+export const slugTyping = (v: string) => v.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+/, '').slice(0, 120);
+
 const BLANK: LandingDraft = {
   layout: 'form', name: '', slug: '', slugTouched: false, audience: '', headline: '', intro: '', question: '', button: 'Send it to me',
   deliverable: 'none', bookingUrl: '', createsLead: false, hasFile: false, consent: '', tags: '', exposure: '', publish: 'now', template: null,
@@ -78,7 +81,7 @@ export function draftFrom(page: LandingPage): LandingDraft {
 /** What the service's create and update take. */
 export function inputFrom(d: LandingDraft, editing: boolean): Record<string, unknown> {
   return {
-    name: d.name.trim(), slug: d.slug, headline: d.headline.trim(), intro: d.intro.trim() || null, question_label: d.question.trim() || null,
+    name: d.name.trim(), slug: slugify(d.slug), headline: d.headline.trim(), intro: d.intro.trim() || null, question_label: d.question.trim() || null,
     button_label: d.button.trim(), consent_label: d.consent.trim(), audience: d.audience,
     tags: d.tags.split(',').map((t) => t.trim()).filter(Boolean),
     deliverable_kind: d.deliverable, booking_url: d.deliverable === 'booking_link' ? d.bookingUrl.trim() : null, creates_lead: d.createsLead,
