@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useGrowth } from '../GrowthProvider';
 import { Card, ChoiceGroup, Empty, LoadError, Loading } from '../ui/primitives';
+import { AttributionView } from './AttributionView';
 import type { ResultsData, ResultsPeriod } from './types';
 
 /**
@@ -21,6 +22,12 @@ export interface ResultsViewProps {
    * then draws no picker of its own. Without it the view keeps its own.
    */
   period?: ResultsPeriod;
+  /**
+   * G6c4: the "What led to paid work" card (first and last touch). On by default; a host that supplies its own `load`
+   * owns the data, so the card shows only when it also supplies `loadAttribution`.
+   */
+  attribution?: boolean;
+  loadAttribution?: (period: ResultsPeriod) => Promise<import('./AttributionView').AttributionData>;
 }
 
 export const RESULTS_PERIODS: ReadonlyArray<{ value: ResultsPeriod; label: string }> = [
@@ -66,7 +73,7 @@ function Bars({ rows, unit }: { rows: Bar[]; unit: string }) {
   );
 }
 
-export function ResultsView({ load, bookedMeans = 'became a customer', period: hostPeriod }: ResultsViewProps) {
+export function ResultsView({ load, bookedMeans = 'became a customer', period: hostPeriod, attribution = true, loadAttribution }: ResultsViewProps) {
   const { request, onError } = useGrowth();
   const [ownPeriod, setPeriod] = useState<ResultsPeriod>('30d');
   const period = hostPeriod ?? ownPeriod;
@@ -167,6 +174,7 @@ export function ResultsView({ load, bookedMeans = 'became a customer', period: h
               </div>
             )}
           </Card>
+          {attribution && (load === undefined || loadAttribution !== undefined) ? <AttributionView period={period} bookedMeans={bookedMeans} load={loadAttribution} /> : null}
         </>
       )}
     </div>
