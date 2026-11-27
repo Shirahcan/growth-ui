@@ -46,6 +46,7 @@ export { useAnnouncementFlow, bodyHtml as announcementBodyHtml } from './announc
 export type { AnnouncementDraft, AnnouncementFlow } from './announcements/useAnnouncementFlow';
 export { NewsletterView, campaignProgress, subjectTestWords, type SubjectTestState } from './campaigns/NewsletterView';
 export { SubjectTestSettingsView } from './campaigns/SubjectTestSettingsView';
+export { DeliverabilityView, type Deliverability, type DeliverabilityCheckRow, type CheckStatus } from './campaigns/DeliverabilityView';
 export { WelcomeSeriesView, welcomeAudience } from './campaigns/WelcomeSeriesView';
 export { WelcomeSeriesEditor, welcomeProblem, type WelcomeSeries, type WelcomeStep, type WelcomeTrigger } from './campaigns/WelcomeSeriesEditor';
 export type { Campaign } from './campaigns/NewsletterView';
