@@ -25,7 +25,7 @@ export interface LandingPagesViewProps {
 }
 
 const STATUS_WORDS: Record<LandingPage['status'], string> = { draft: 'Draft', live: 'Live', paused: 'Paused' };
-const SENDS_WORDS: Record<LandingPage['deliverable_kind'], string> = { none: 'Nothing', file: 'A file', booking_link: 'A booking link' };
+const SENDS_WORDS: Record<LandingPage['deliverable_kind'], string> = { none: 'Nothing', file: 'A PDF', booking_link: 'A booking link' };
 
 export function LandingPagesView({ onEdit, onDesign, onPreview, onViewSignups, onOpenSettings, reloadKey: hostReload = 0, leadsFor }: LandingPagesViewProps) {
   const { request, notify, onError, canEdit, words } = useGrowth();

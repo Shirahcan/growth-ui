@@ -30,11 +30,13 @@ export interface LandingStepsOptions {
   /** The product's host for booking links (its own site); booking links elsewhere are refused. */
   bookingHost?: string | null;
   onPreview?: () => void;
+  /** The page's status when editing ('live' says changes show at once); absent for a new page. */
+  pageStatus?: string;
   /** The host's shell carries the verb in its own footer; the last step then draws no button. */
   hostSubmits?: boolean;
 }
 
-const SENDS: Record<LandingDraft['deliverable'], string> = { none: 'Nothing', file: 'A file', booking_link: 'A booking link' };
+const SENDS: Record<LandingDraft['deliverable'], string> = { none: 'Nothing', file: 'A PDF', booking_link: 'A booking link' };
 const EXPOSURE: Record<'search' | 'link_only', string> = { search: 'Search engines and AI assistants', link_only: 'Only people with the link' };
 /** Below this, a page rarely ranks; said gently, never enforced. */
 const SEARCH_WORDS_HINT = 150;
@@ -249,7 +251,7 @@ function Deliverable({ flow, limitWords }: { flow: LandingFlow; limitWords?: str
     <div className="gr-stack">
       <Lead
         decides="What do they get for signing up?"
-        consequence={`${words.product} emails it straight after they submit, whether or not they tick the updates box. Asking for a file never depends on agreeing to marketing.`}
+        consequence={`${words.product} emails it to them whether or not they tick the updates box: straight away if they do not, or once they confirm their email if they do. Asking for a file never depends on agreeing to marketing.`}
         wayOut="You can change this later. People who already signed up keep what they were sent."
       />
       <OptionCards<LandingDraft['deliverable']>
@@ -291,7 +293,9 @@ function Review({ flow, options, address }: { flow: LandingFlow; options: Landin
         {d.layout === 'pml'
           ? 'This saves the sign-up details and opens the designer. Add the sign-up form there, then publish it from Landing pages.'
           : flow.editing
-            ? 'Changes to a live page show as soon as you save.'
+            ? options.pageStatus === 'live'
+              ? 'Changes to a live page show as soon as you save.'
+              : 'It stays as it is now (not live) until you publish it from Landing pages.'
             : `Anyone with the link can open ${address(d.slug)} once it is published.`}
       </p>
       {options.baseUrl === null ? <p className="gr-warning">Your landing pages have no address yet. Set where they live in Growth settings before publishing.</p> : null}
@@ -320,6 +324,11 @@ function Review({ flow, options, address }: { flow: LandingFlow; options: Landin
         <li className="gr-hint">Who can find it: {d.exposure ? EXPOSURE[d.exposure] : 'Not chosen'}</li>
       </ul>
       {flow.refusal ? <Notice>{flow.refusal}</Notice> : null}
+      {flow.done ? (
+        <p className="gr-row-title" role="status">
+          {flow.done.status === 'live' ? `Published. Anyone with the link can open ${address(flow.done.slug)}.` : flow.editing ? 'Saved.' : 'Saved as a draft. Publish it from Landing pages when you are ready.'}
+        </p>
+      ) : null}
       {options.hostSubmits || flow.done ? null : (
         <div>
           <Button tone="primary" disabled={flow.submitting} onClick={() => void flow.submit()}>{flow.submitting ? 'Working…' : landingVerb(flow)}</Button>

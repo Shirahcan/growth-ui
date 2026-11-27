@@ -76,6 +76,10 @@ describe('the landing page steps', () => {
     expect(order).toEqual(['POST landing-pages', 'upload', 'POST landing-pages/p1/publish']);
     expect(uploadFile).toHaveBeenCalledWith('p1', expect.any(File));
     expect((out as LandingPage | null)?.status).toBe('live');
+    // The shell re-checks every step after the verb: the page has its file now, so the PDF step must not ask again.
+    expect(flow.draft.hasFile).toBe(true);
+    expect(landingSteps(flow, OPTIONS).find((s) => s.id === 'deliverable')!.validate()).toBeNull();
+    expect(screen.getByRole('status').textContent).toContain('Published.');
   });
 
   it('a refusal stays on the review step and a retry updates the same page', async () => {

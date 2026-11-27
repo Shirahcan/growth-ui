@@ -122,7 +122,10 @@ export function useLandingFlow({ page = null, start = {}, uploadFile }: LandingF
       if (draft.deliverable === 'file' && file !== null) {
         if (!uploadFile) throw new Error('Files cannot be sent from here yet: this site has not connected file uploads.');
         await uploadFile(saved.uuid, file);
+        // The page has its file now: a later check (the host's shell re-validates every step) must not ask for it again.
         setFileState(null);
+        setDraft((d) => ({ ...d, hasFile: true }));
+        saved = { ...saved, has_file: true };
       }
       if (!editing && draft.layout === 'form' && draft.publish === 'now') {
         saved = unwrap(await request<Envelope<{ page: LandingPage }>>('POST', `landing-pages/${saved.uuid}/publish`, {})).page;
