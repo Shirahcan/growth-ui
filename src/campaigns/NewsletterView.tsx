@@ -3,6 +3,7 @@ import { useGrowth } from '../GrowthProvider';
 import { momentLabel } from '../plan/dates';
 import { unwrap, type Envelope } from '../plan/types';
 import { fieldError } from '../settings/SourceDialog';
+import { WelcomeSeriesView } from './WelcomeSeriesView';
 import { Button, Card, ChoiceGroup, Dialog, Empty, Field, INPUT, Kebab, LoadError, Loading, Pill, copyText } from '../ui/primitives';
 
 /**
@@ -81,6 +82,7 @@ export function NewsletterView({
   onEdit,
   onPreview,
   onSaveAsTemplate,
+  showWelcome = true,
 }: {
   newCampaign?: ReactNode;
   onEdit?: (uuid: string) => void;
@@ -89,6 +91,8 @@ export function NewsletterView({
    * Absent, or the newsletter is written rather than designed: no item.
    */
   onPreview?: (campaign: Campaign) => void;
+  /** The Welcome series card below the list (G5g). On by default; a host that shows it elsewhere passes false. */
+  showWelcome?: boolean;
   /**
    * A new template made from a designed newsletter, as its designer's "Save as a template" (the host's template flow).
    * Absent, or the newsletter is written (the service has no structure to make a template from): no item.
@@ -163,6 +167,7 @@ export function NewsletterView({
   const shown = (items ?? []).filter((c) => filter === 'all' || c.kind === filter);
 
   return (
+    <>
     <Card>
       <div className="gr-stack">
         <div className="gr-row-between">
@@ -259,5 +264,8 @@ export function NewsletterView({
         </Dialog>
       ) : null}
     </Card>
+    {/* G5g: the welcome series a new subscriber gets after confirming, on the same tab. */}
+    {showWelcome ? <WelcomeSeriesView /> : null}
+    </>
   );
 }
