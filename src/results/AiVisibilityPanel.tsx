@@ -14,6 +14,8 @@ export interface AiVisibilityCheckRow {
 export interface AiVisibilityData {
   period: ResultsPeriod;
   own_hosts: string[];
+  /** the sites added here, apart from the blog's own address */
+  domains?: string[];
   visits: Array<{ kind: 'post' | 'landing'; ref: string; title: string; visits: number }>;
   questions: Array<{ question: string; last_check: AiVisibilityCheckRow | null }>;
   cost: { web_searches: number };
@@ -68,7 +70,7 @@ export function AiVisibilityPanel({ period }: { period: ResultsPeriod }) {
 
   const startEditing = () => {
     setDraft((data?.questions ?? []).map((q) => q.question).join('\n'));
-    setSites((data?.own_hosts ?? []).join('\n'));
+    setSites((data?.domains ?? []).join('\n'));
     setEditing(true);
   };
 
@@ -160,7 +162,7 @@ export function AiVisibilityPanel({ period }: { period: ResultsPeriod }) {
                   <label className="gr-field">
                     <span className="gr-label">What counts as your site, one per line</span>
                     <textarea className="gr-input" rows={2} value={sites} onChange={(e) => setSites(e.target.value)} />
-                    <span className="gr-hint">Host names only. Your blog&apos;s address is always included.</span>
+                    <span className="gr-hint">Host names only, for example portify.shirah.co. Your blog&apos;s address is always included, so add only other sites.</span>
                   </label>
                   <div className="gr-row">
                     <button type="button" className="gr-button gr-button-primary" disabled={busy !== null} onClick={() => void save()}>
