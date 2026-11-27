@@ -124,6 +124,7 @@ export { guestReadingStore, useGuestReading } from './blog/reading/guestStore';
 export type { GuestReadingStore, ReadEntry } from './blog/reading/guestStore';
 export { ResultsView, RESULTS_PERIODS } from './results/ResultsView';
 export { AttributionView, paidWords, type AttributionData, type AttributionRow } from './results/AttributionView';
+export { AiVisibilityPanel, type AiVisibilityData, type AiVisibilityCheckRow } from './results/AiVisibilityPanel';
 export type { ResultsViewProps } from './results/ResultsView';
 export type { ResultsData, ResultsPeriod } from './results/types';
 export { LandingPagesView } from './landing/LandingPagesView';
