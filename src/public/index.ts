@@ -26,3 +26,6 @@ export type {
 } from './types';
 export { themeStyle } from '../theme';
 export type { GrowthTheme } from '../theme';
+
+// G7e3: a growth document's social card, drawn by the product's share-card page (a server component).
+export { GrowthShareCard, growthCardStyle, readableOn, type GrowthCardPayload, type GrowthCardRenderer } from '../cards/GrowthShareCard';
