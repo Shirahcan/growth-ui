@@ -40,6 +40,8 @@ export interface PostHeadSource {
   robots?: { index: boolean; follow: boolean } | null;
   canonical_url?: string | null;
   social?: { title: string | null; description: string | null } | null;
+  /** The drawn social card (G7e4), when growth-service has drawn one; absent or null before that. */
+  share_card?: { url: string; width: number; height: number; alt: string } | null;
 }
 
 export interface PostHead {
@@ -51,7 +53,10 @@ export interface PostHead {
   /** Where search engines should credit it: the post's canonical address, else its own. */
   canonical: string;
   robots: { index: boolean; follow: boolean };
-  /** The share card: its own words, else the search words; its picture is the cover, else none (the host's own card). */
+  /**
+   * The share card: its own words, else the search words; its picture is the drawn card (G7e4), else the cover, else
+   * none (the host's own card).
+   */
   social: { title: string; description: string; image: string | null; imageAlt: string | null };
 }
 
@@ -72,7 +77,10 @@ export function postHead(post: PostHeadSource, site: PostHeadSite): PostHead {
   const url = joinUrl(site.origin, postPath(paths, post.slug));
   const title = searchTitle(post, site);
   const description = (post.meta_description ?? '').trim() || post.answer.trim();
-  const picture = (post.cover?.media ?? post.cover?.url ?? '').trim();
+  const cover = (post.cover?.media ?? post.cover?.url ?? '').trim();
+  const drawn = (post.share_card?.url ?? '').trim();
+  const picture = drawn !== '' ? drawn : cover;
+  const pictureAlt = drawn !== '' ? (post.share_card?.alt ?? '').trim() : (post.cover?.alt ?? '').trim();
 
   return {
     title,
@@ -84,7 +92,7 @@ export function postHead(post: PostHeadSource, site: PostHeadSite): PostHead {
       title: (post.social?.title ?? '').trim() || title,
       description: (post.social?.description ?? '').trim() || description,
       image: picture !== '' ? picture : null,
-      imageAlt: picture !== '' ? (post.cover?.alt ?? '').trim() || null : null,
+      imageAlt: picture !== '' ? pictureAlt || null : null,
     },
   };
 }

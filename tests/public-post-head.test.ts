@@ -39,6 +39,14 @@ describe('a post’s head and structured data', () => {
     expect(head.social.description).toBe('Share words');
   });
 
+  it('shares the drawn card first (G7e4), and keeps the cover until one is drawn', () => {
+    const drawn = postHead({ ...post, share_card: { url: 'https://portify.example/media/card.png', width: 1200, height: 630, alt: 'Express Entry 2026' } }, site);
+
+    expect(drawn.social.image).toBe('https://portify.example/media/card.png');
+    expect(drawn.social.imageAlt).toBe('Express Entry 2026');
+    expect(postHead({ ...post, share_card: null }, site).social.image).toBe('https://portify.example/c.jpg');
+  });
+
   it('falls back to the title and summary, and has no picture without a cover', () => {
     const head = postHead({ ...post, meta_title: '', meta_description: null, cover: null }, site);
 
