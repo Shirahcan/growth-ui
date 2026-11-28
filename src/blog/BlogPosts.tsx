@@ -6,13 +6,14 @@ import { BlogCategories } from './BlogCategories';
 import { seoScoreColor } from './PostSeoPanel';
 import type { BlogCategory, BlogPostReach, BlogPostSummary } from './types';
 
-type StatusFilter = 'all' | 'published' | 'draft' | 'stale';
+type StatusFilter = 'all' | 'published' | 'draft' | 'stale' | 'links_broken';
 
 const STATUS_FILTERS: Array<{ value: StatusFilter; label: string }> = [
   { value: 'all', label: 'All' },
   { value: 'published', label: 'Published' },
   { value: 'draft', label: 'Drafts' },
   { value: 'stale', label: 'Facts need a look' },
+  { value: 'links_broken', label: 'Links broken' },
 ];
 
 /** The one status a reader of the list needs, most urgent first (the same six Portify's list showed). */

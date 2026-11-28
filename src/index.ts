@@ -16,6 +16,8 @@ export { PlanCalendar } from './plan/PlanCalendar';
 export type { PlanCalendarProps } from './plan/PlanCalendar';
 export { PlanRadarView } from './plan/PlanRadarView';
 export type { PlanRadarViewProps } from './plan/PlanRadarView';
+// G7f: Plan > Needs a refresh, the published posts most in need of a refresh with their reasons (no AI).
+export { RefreshQueueView, type RefreshQueueItem } from './plan/RefreshQueueView';
 export type { PlanIdea, PlanIdeas, PlanCalendarItem, RadarSignal, RadarStalePost, SkipReason } from './plan/types';
 export { thisMonth, shiftMonth } from './plan/dates';
 export { areaHref } from './GrowthProvider';
