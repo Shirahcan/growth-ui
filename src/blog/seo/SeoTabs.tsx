@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { postHead, postJsonLd, type PostHeadSite, type PostHeadSource } from '../../public/postHead';
 import { MeteredField, SettingSwitch, SharePreviewCard } from './SeoPieces';
+import { ShareCardPanel } from '../../cards/ShareCardPanel';
 
 /** The panel's view of a post's saved settings, and its one way to save one (the guarded fields save). */
 export interface SeoFieldsAccess {
@@ -96,7 +97,7 @@ export function SeoSchemaTab({ preview, site, fallbackImage }: { preview: PostHe
 }
 
 /** Social: the card a shared link shows, and the two words that can differ from the search ones. */
-export function SeoSocialTab({ access, preview, site, fallbackImage }: { access: SeoFieldsAccess; preview: PostHeadSource; site: PostHeadSite; fallbackImage?: string | null }) {
+export function SeoSocialTab({ access, preview, site, fallbackImage, postUuid }: { access: SeoFieldsAccess; preview: PostHeadSource; site: PostHeadSite; fallbackImage?: string | null; postUuid?: string }) {
   const { values, save, canEdit } = access;
   const [title, setTitle] = useState(text(values.social_title));
   const [description, setDescription] = useState(text(values.social_description));
@@ -114,6 +115,7 @@ export function SeoSocialTab({ access, preview, site, fallbackImage }: { access:
       <p className="gr-hint" style={{ margin: 0 }}>
         Facebook, LinkedIn and X use the search title, the search description and the cover picture, unless you change the words here.
       </p>
+      {postUuid ? <ShareCardPanel kind="post" uuid={postUuid} /> : null}
       <MeteredField
         name="social_title"
         label="Title when shared"

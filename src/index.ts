@@ -137,3 +137,6 @@ export { useLandingFlow, draftFrom, slugify } from './landing/useLandingFlow';
 export type { LandingDraft, LandingFlow, LandingFlowOptions } from './landing/useLandingFlow';
 export { landingSteps, landingVerb } from './landing/LandingSteps';
 export type { LandingStep, LandingStepsOptions } from './landing/LandingSteps';
+
+// G7e4: a published post's or landing page's share card, its reason when missing, and Draw it again.
+export { ShareCardPanel, type ShareCardState } from './cards/ShareCardPanel';

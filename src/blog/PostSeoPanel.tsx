@@ -319,7 +319,7 @@ export function PostSeoPanel({ uuid, refreshKey, onJump, onSaved, site, shareIma
         ) : tab === 'schema' ? (
           <SeoSchemaTab preview={preview} site={site} fallbackImage={shareImage?.(preview) ?? null} />
         ) : access ? (
-          <SeoSocialTab key={`soc-${String(fields?.revision)}`} access={access} preview={preview} site={site} fallbackImage={shareImage?.(preview) ?? null} />
+          <SeoSocialTab key={`soc-${String(fields?.revision)}`} access={access} preview={preview} site={site} fallbackImage={shareImage?.(preview) ?? null} postUuid={uuid} />
         ) : (
           <p className="gr-hint">Reading the post&apos;s settings…</p>
         )}
